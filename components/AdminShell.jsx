@@ -12,6 +12,7 @@ export default function AdminShell({ children }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const isPublicRoute = pathname === "/" || pathname === "/login";
 
   useEffect(() => {
     let active = true;
@@ -19,7 +20,7 @@ export default function AdminShell({ children }) {
     const check = async () => {
       const token = auth.getToken();
 
-      if (pathname === "/login") {
+      if (isPublicRoute) {
         if (!token) {
           if (!active) return;
           setIsAuthenticated(false);
@@ -32,7 +33,9 @@ export default function AdminShell({ children }) {
           if (!active) return;
           setIsAuthenticated(true);
           setCheckingAuth(false);
-          router.replace("/dashboard");
+          if (pathname === "/login") {
+            router.replace("/dashboard");
+          }
         } catch {
           auth.clearSession();
           if (!active) return;
@@ -69,7 +72,7 @@ export default function AdminShell({ children }) {
     return () => {
       active = false;
     };
-  }, [pathname, router]);
+  }, [isPublicRoute, pathname, router]);
 
   if (checkingAuth) {
     return (
@@ -81,7 +84,7 @@ export default function AdminShell({ children }) {
     );
   }
 
-  if (pathname === "/login") {
+  if (isPublicRoute) {
     return <main className="min-h-screen">{children}</main>;
   }
 
