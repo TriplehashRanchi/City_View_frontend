@@ -1,116 +1,192 @@
-import { ArrowUpRight, CalendarClock, FileCheck2, Handshake, Sparkles, Users } from "lucide-react";
+"use client";
+
+import React from "react";
+import { 
+  ArrowUpRight, 
+  CalendarClock, 
+  FileCheck2, 
+  Handshake, 
+  Sparkles, 
+  Users, 
+  Plus, 
+  ArrowRight,
+  Clock,
+  MapPin,
+  CheckCircle2
+} from "lucide-react";
+
 
 const statCards = [
   {
-    title: "Total Events",
+    title: "Quarterly Events",
     value: "45",
-    change: "+12%",
-    note: "vs last month",
+    change: "+12.5%",
     icon: CalendarClock,
   },
   {
-    title: "Quotations",
+    title: "Pending Proposals",
     value: "120",
-    change: "+18%",
-    note: "high intent leads",
+    change: "+18.2%",
     icon: FileCheck2,
   },
   {
-    title: "Accepted",
-    value: "32",
-    change: "+9%",
-    note: "conversion quality",
+    title: "Contract Conversion",
+    value: "64%",
+    change: "+4.1%",
     icon: Handshake,
   },
   {
-    title: "Active Clients",
-    value: "76",
-    change: "+6%",
-    note: "retained this quarter",
+    title: "Guest Reach",
+    value: "1.2k",
+    change: "+6.3%",
     icon: Users,
   },
 ];
 
-const upcoming = [
-  { title: "Royal Banquet Wedding", date: "Mar 12", status: "Confirmed" },
-  { title: "Corporate Launch Event", date: "Mar 14", status: "Prep Ongoing" },
-  { title: "Silver Jubilee Dinner", date: "Mar 19", status: "Awaiting Assets" },
+const upcomingEvents = [
+  { 
+    title: "Royal Banquet Wedding", 
+    date: "March 12", 
+    time: "06:00 PM", 
+    venue: "Grand Ballroom",
+    status: "Confirmed",
+    color: "text-emerald-400" 
+  },
+  { 
+    title: "Tech Founders Gala", 
+    date: "March 14", 
+    time: "07:30 PM", 
+    venue: "Sky Lounge",
+    status: "Preparation",
+    color: "text-amber-400" 
+  },
+  { 
+    title: "Silver Jubilee Dinner", 
+    date: "March 19", 
+    time: "08:00 PM", 
+    venue: "Main Hall",
+    status: "Drafting",
+    color: "text-zinc-500" 
+  },
 ];
 
 export default function Dashboard() {
   return (
-    <section className="space-y-6">
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-cyan-900 to-indigo-900 p-6 text-white shadow-xl md:p-8">
-        <div className="pointer-events-none absolute -right-10 top-0 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
-        <p className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-cyan-100">
-          <Sparkles size={14} />
-          Welcome back, Admin
-        </p>
-        <h1 className="mt-4 text-2xl font-bold tracking-tight md:text-3xl">CityView Event Command Center</h1>
-        <p className="mt-2 max-w-2xl text-sm text-cyan-100 md:text-base">
-          Monitor revenue-critical activity, keep operations aligned, and move faster on high-value event deals.
-        </p>
-      </div>
+    <div className="mx-auto max-w-[1400px] space-y-10 p-4 md:p-8 text-zinc-300">
+      
+      {/* --- HERO SECTION: Editorial Style --- */}
+      <header className="relative flex flex-col justify-between gap-6 md:flex-row md:items-end">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.3em] text-amber-500/80">
+            <span className="h-px w-8 bg-amber-500/50"></span>
+            Management Suite
+          </div>
+          <h1 className="text-4xl font-light tracking-tight text-black md:text-5xl">
+            Good Evening, <span className="font-serif italic text-amber-200/90">Alexander</span>
+          </h1>
+          <p className="max-w-md text-sm leading-relaxed text-zinc-500">
+            The venue is running at peak performance. You have three gala events scheduled for this weekend.
+          </p>
+        </div>
+        
+        <button className="group flex bg-amber-300 items-center gap-3 rounded-full text px-6 py-3.5 text-xs font-bold uppercase tracking-widest text-black transition-all hover:bg-amber-400 hover:scale-105 active:scale-95">
+          <Plus size={16} strokeWidth={3} />
+          New Reservation
+        </button>
+      </header>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {statCards.map((card) => {
-          const Icon = card.icon;
-          return (
-            <article
-              key={card.title}
-              className="rounded-2xl border border-white/70 bg-white/85 p-5 shadow-lg shadow-slate-900/5 backdrop-blur"
-            >
-              <div className="flex items-start justify-between">
-                <p className="text-sm font-medium text-slate-500">{card.title}</p>
-                <span className="rounded-lg bg-slate-100 p-2 text-slate-600">
-                  <Icon size={16} />
-                </span>
+      {/* --- METRICS: Jewelry-Box Style --- */}
+      <div className="grid gap-px overflow-hidden rounded-[2rem] border border-white/5 bg-white/5 sm:grid-cols-2 lg:grid-cols-4">
+        {statCards.map((card, idx) => (
+          <div key={idx} className="group relative bg-[#0D0D0F] p-8 transition-colors hover:bg-zinc-900/40">
+            <div className="mb-6 flex items-center justify-between">
+              <div className="rounded-full bg-amber-500/10 p-2.5 text-amber-500 ring-1 ring-amber-500/20">
+                <card.icon size={18} />
               </div>
-              <p className="mt-4 text-3xl font-bold tracking-tight text-slate-900">{card.value}</p>
-              <p className="mt-2 text-xs">
-                <span className="font-semibold text-emerald-600">{card.change}</span>
-                <span className="ml-1 text-slate-500">{card.note}</span>
-              </p>
-            </article>
-          );
-        })}
+              <span className="text-[10px] font-bold text-emerald-500 bg-emerald-500/5 px-2 py-0.5 rounded-md">
+                {card.change}
+              </span>
+            </div>
+            <h3 className="text-xs font-medium uppercase tracking-widest text-zinc-500">{card.title}</h3>
+            <p className="mt-2 text-4xl font-light tracking-tighter text-white">{card.value}</p>
+          </div>
+        ))}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <article className="rounded-2xl border border-white/70 bg-white/90 p-6 shadow-lg shadow-slate-900/5 lg:col-span-2">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-slate-900">Upcoming Event Timeline</h2>
-            <button className="inline-flex items-center gap-1 text-sm font-medium text-cyan-700 transition hover:text-cyan-800">
-              Open calendar
-              <ArrowUpRight size={14} />
+      {/* --- MAIN CONTENT: Balanced Asymmetry --- */}
+      <div className="grid gap-10 lg:grid-cols-5">
+        
+        {/* Event Timeline (60% width) */}
+        <section className="lg:col-span-3">
+          <div className="mb-8 flex items-center justify-between">
+            <h2 className="text-xl font-medium tracking-tight text-black">Event Schedule</h2>
+            <button className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-zinc-500 transition-colors hover:text-amber-500">
+              Full Calendar <ArrowRight size={14} />
             </button>
           </div>
 
-          <div className="space-y-3">
-            {upcoming.map((item) => (
-              <div
-                key={item.title}
-                className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/70 px-4 py-3"
-              >
-                <div>
-                  <p className="text-sm font-semibold text-slate-800">{item.title}</p>
-                  <p className="text-xs text-slate-500">{item.date}</p>
+          <div className="space-y-4">
+            {upcomingEvents.map((event, i) => (
+              <div key={i} className="group flex items-center gap-6 rounded-3xl border border-white/5 bg-[#141417]/50 p-6 transition-all hover:bg-zinc-900/50">
+                <div className="hidden flex-col items-center text-center md:flex">
+                  <span className="text-xs font-bold text-zinc-500 uppercase">{event.date.split(' ')[0]}</span>
+                  <span className="text-xl font-light text-white">{event.date.split(' ')[1]}</span>
                 </div>
-                <span className="rounded-full bg-cyan-100 px-3 py-1 text-xs font-medium text-cyan-800">{item.status}</span>
+                
+                <div className="h-10 w-px bg-white/5 hidden md:block" />
+
+                <div className="flex-1 space-y-1">
+                  <h4 className="font-medium text-zinc-100 group-hover:text-amber-200 transition-colors">{event.title}</h4>
+                  <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-500">
+                    <span className="flex items-center gap-1.5"><Clock size={12} /> {event.time}</span>
+                    <span className="flex items-center gap-1.5"><MapPin size={12} /> {event.venue}</span>
+                  </div>
+                </div>
+
+                <div className={`text-[10px] font-bold uppercase tracking-widest ${event.color}`}>
+                  {event.status}
+                </div>
               </div>
             ))}
           </div>
-        </article>
+        </section>
 
-        <article className="rounded-2xl border border-white/70 bg-white/90 p-6 shadow-lg shadow-slate-900/5">
-          <h2 className="text-lg font-semibold text-slate-900">Focus Today</h2>
-          <ul className="mt-4 space-y-3 text-sm text-slate-600">
-            <li className="rounded-xl bg-slate-50 px-3 py-2">Follow up on 7 pending premium quotations.</li>
-            <li className="rounded-xl bg-slate-50 px-3 py-2">Finalize product package pricing for Q2.</li>
-            <li className="rounded-xl bg-slate-50 px-3 py-2">Assign venue checks for weekend events.</li>
-          </ul>
-        </article>
+        {/* Focus List (40% width) */}
+        <section className="lg:col-span-2">
+          <div className="h-full rounded-[2.5rem] border border-amber-500/10 bg-gradient-to-b from-amber-500/[0.03] to-transparent p-8">
+            <h2 className="text-xl font-medium tracking-tight text-black">Maitre D' Focus</h2>
+            <p className="mt-1 text-xs text-zinc-500">Priority actions for the current shift</p>
+
+            <div className="mt-10 space-y-8">
+              {[
+                { task: "Approve Champagne inventory for Friday", sub: "Inventory Control" },
+                { task: "Finalize seating chart for Royal Banquet", sub: "Floor Management" },
+                { task: "Staff briefing at 04:00 PM", sub: "Operations" },
+              ].map((item, i) => (
+                <div key={i} className="flex gap-4 group cursor-pointer">
+                  <div className="mt-1">
+                    <CheckCircle2 size={18} className="text-zinc-800 group-hover:text-amber-500 transition-colors" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-zinc-300 group-hover:text-white">{item.task}</p>
+                    <p className="text-[10px] uppercase tracking-widest text-zinc-600 mt-1">{item.sub}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-12 rounded-2xl bg-white/[0.02] p-6 border border-white/5">
+              <div className="flex items-center gap-2 text-amber-500 mb-2">
+                <Sparkles size={16} />
+                <span className="text-[10px] font-bold uppercase tracking-widest">Premium Insight</span>
+              </div>
+              <p className="text-xs leading-relaxed text-zinc-400">
+                Wedding of Alistair has <span className="text-white">12 VIP guests</span> confirmed. Special dietary protocols have been sent to the kitchen.
+              </p>
+            </div>
+          </div>
+        </section>
       </div>
-    </section>
+    </div>
   );
 }
