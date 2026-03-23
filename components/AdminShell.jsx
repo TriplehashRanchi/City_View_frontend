@@ -29,8 +29,9 @@ export default function AdminShell({ children }) {
         }
 
         try {
-          await auth.me();
+          const session = await auth.me();
           if (!active) return;
+          if (session?.admin) auth.saveAdmin(session.admin);
           setIsAuthenticated(true);
           setCheckingAuth(false);
           if (pathname === "/login") {
@@ -54,8 +55,9 @@ export default function AdminShell({ children }) {
       }
 
       try {
-        await auth.me();
+        const session = await auth.me();
         if (!active) return;
+        if (session?.admin) auth.saveAdmin(session.admin);
         setIsAuthenticated(true);
       } catch {
         auth.clearSession();

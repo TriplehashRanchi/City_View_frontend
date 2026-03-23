@@ -5,47 +5,54 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   CalendarDays,
-  UtensilsCrossed,
+  ClipboardList,
+  Boxes,
   Users2,
   FileBadge,
-  Settings,
+  HandPlatter,
   LogOut,
   X,
   Sparkles,
-  Wine,
-  ChefHat,
-  ReceiptText,
+  Package,
+  UtensilsCrossed,
   ChevronRight,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { auth } from "@/services/auth";
 
 const navigation = [
   {
-    group: "Core Operations",
+    group: "Overview",
     items: [
       { name: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
-      { name: "Event Calendar", icon: CalendarDays, path: "/events" },
-      { name: "Bookings", icon: ReceiptText, path: "/bookings" },
     ],
   },
   {
-    group: "Hospitality",
+    group: "Catalog",
     items: [
-      { name: "Catering Menu", icon: ChefHat, path: "/products" },
-      { name: "Wine & Bar", icon: Wine, path: "/bar" },
-      { name: "Guest List", icon: Users2, path: "/clients" },
+      { name: "Products", icon: UtensilsCrossed, path: "/products" },
+      { name: "Services", icon: HandPlatter, path: "/services" },
+      { name: "Packages", icon: Package, path: "/packages" },
     ],
   },
   {
-    group: "Administrative",
+    group: "Operations",
     items: [
+      { name: "Clients", icon: Users2, path: "/clients" },
+      { name: "Events", icon: CalendarDays, path: "/events" },
       { name: "Quotations", icon: FileBadge, path: "/quotations" },
-      { name: "Settings", icon: Settings, path: "/settings" },
     ],
   },
 ];
 
 export default function Sidebar({ isOpen = false, onClose = () => {} }) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const onLogout = () => {
+    auth.clearSession();
+    router.replace("/login");
+  };
 
   return (
     <>
@@ -68,7 +75,7 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-200 via-amber-500 to-amber-700 p-[1px]">
               <div className="flex h-full w-full items-center justify-center rounded-[11px] bg-[#0a0a0b]">
-                <UtensilsCrossed size={20} className="text-amber-500" />
+                <Boxes size={20} className="text-amber-500" />
               </div>
             </div>
             <div>
@@ -140,13 +147,13 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
               <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/20 text-amber-500">
                 <Sparkles size={16} />
               </div>
-              <p className="text-xs font-semibold text-zinc-200">Concierge AI</p>
+              <p className="text-xs font-semibold text-zinc-200">Workflow Map</p>
               <p className="mt-1 text-[11px] leading-relaxed text-zinc-500">
-                Generate custom floor plans and seating charts instantly.
+                Move from client creation to accepted quotation without leaving the admin workspace.
               </p>
-              <button className="mt-4 w-full rounded-lg bg-zinc-800 py-2 text-[11px] font-bold text-white transition hover:bg-zinc-700">
-                Launch Assistant
-              </button>
+              <div className="mt-4 rounded-lg border border-white/8 bg-white/[0.03] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-400">
+                Clients &gt; Events &gt; Quotations
+              </div>
             </div>
             {/* Decorative background glow */}
             <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-amber-500/10 blur-2xl" />
@@ -156,19 +163,15 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
         {/* User Profile / Footer */}
         <div className="border-t border-white/5 p-4">
           <div className="flex items-center gap-3 rounded-xl bg-white/[0.02] p-3 border border-white/5">
-            <div className="relative">
-              <img
-                src="https://ui-avatars.com/api/?name=Admin+User&background=f59e0b&color=fff"
-                alt="Profile"
-                className="h-9 w-9 rounded-lg object-cover"
-              />
+            <div className="relative grid h-9 w-9 place-items-center rounded-lg bg-amber-500 font-semibold text-black">
+              A
               <div className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#0a0a0b] bg-emerald-500"></div>
             </div>
             <div className="flex flex-1 flex-col overflow-hidden">
-              <p className="truncate text-xs font-bold text-zinc-200">Alexander Rossi</p>
-              <p className="truncate text-[10px] text-zinc-500">Executive Manager</p>
+              <p className="truncate text-xs font-bold text-zinc-200">Admin Session</p>
+              <p className="truncate text-[10px] text-zinc-500">Secure event operations</p>
             </div>
-            <button className="text-zinc-600 hover:text-red-400 transition-colors">
+            <button onClick={onLogout} className="text-zinc-600 hover:text-red-400 transition-colors">
               <LogOut size={16} />
             </button>
           </div>

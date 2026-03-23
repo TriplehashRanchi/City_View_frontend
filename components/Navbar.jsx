@@ -3,24 +3,21 @@
 import { 
   Menu, 
   Search, 
-  Bell, 
-  Settings, 
   ChevronRight, 
   LogOut, 
   Command,
-  Clock,
-  CircleDot
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { auth } from "@/services/auth";
 
 const labels = {
   dashboard: "Executive Overview",
-  clients: "Guest Relations",
-  products: "Culinary Menu",
-  services: "Event Packages",
-  events: "Event Schedule",
-  quotations: "Financial Proposals",
+  clients: "Client Registry",
+  products: "Product Catalog",
+  services: "Service Catalog",
+  packages: "Package Builder",
+  events: "Event Operations",
+  quotations: "Quotation Desk",
 };
 
 export default function TopNavbar({ onMenuClick = () => {} }) {
@@ -73,7 +70,7 @@ export default function TopNavbar({ onMenuClick = () => {} }) {
             </div>
             <input
               type="text"
-              placeholder="Search reservations, guests, or menus..."
+              placeholder="Search clients, events, quotations..."
               className="w-full rounded-2xl border border-white/5 bg-white/[0.03] py-2.5 pl-10 pr-4 text-sm text-zinc-200 placeholder:text-zinc-600 focus:border-amber-500/30 focus:bg-white/[0.05] focus:outline-none focus:ring-1 focus:ring-amber-500/30 transition-all"
             />
             <div className="absolute inset-y-0 right-3 flex items-center">
