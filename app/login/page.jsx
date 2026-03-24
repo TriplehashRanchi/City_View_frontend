@@ -42,39 +42,42 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative grid min-h-screen overflow-hidden bg-slate-100 p-4 md:p-8 lg:grid-cols-2 lg:gap-8">
-      <div className="pointer-events-none absolute -left-24 top-10 h-72 w-72 rounded-full bg-cyan-300/25 blur-3xl" />
-      <div className="pointer-events-none absolute bottom-0 right-0 h-80 w-80 rounded-full bg-indigo-300/25 blur-3xl" />
+    <div className="relative grid min-h-screen overflow-hidden bg-white p-4 md:p-8 lg:grid-cols-2 lg:gap-8">
+      {/* Warm decorative blurs */}
+      <div className="pointer-events-none absolute -left-24 top-10 h-72 w-72 rounded-full bg-[#FDC3A1]/40 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-0 right-0 h-80 w-80 rounded-full bg-[#FB9B8F]/30 blur-3xl" />
 
-      <section className="relative hidden rounded-3xl border border-white/60 bg-gradient-to-br from-slate-900 via-cyan-900 to-indigo-900 p-10 text-white shadow-2xl lg:flex lg:flex-col lg:justify-between">
-        <div>
-          <p className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold tracking-wide text-cyan-100">
+      {/* Left Panel - Warm Gradient */}
+      <section className="relative hidden rounded-3xl border border-[#FDC3A1]/40 bg-[url('https://www.marriagecolours.com/wp-content/uploads/2025/04/Anisha-Vishal-Reception-MRC-9.jpg')] bg-center bg-cover p-10 text-gray-800 shadow-2xl lg:flex lg:flex-col lg:justify-between">
+        <div className="border bg-linear-to-br from-amber-100 via-white to-white border-amber-100 p-5 rounded-2xl">
+          <p className="inline-flex items-center gap-2 rounded-full border border-[#F57799]/30 bg-white/90 px-3 py-1 text-xs font-semibold tracking-wide text-[#F57799]">
             <Sparkles size={14} />
             CITYVIEW ADMIN
           </p>
-          <h1 className="mt-5 text-4xl font-bold leading-tight">Secure control for premium event operations</h1>
-          <p className="mt-4 max-w-md text-sm text-cyan-100/90">
+          <h1 className="mt-5 text-6xl font-bold leading-tighter text-zinc-800 text-shadow-2xs">Secure control for premium event operations</h1>
+          <p className="mt-4 max-w-md text-sm text-zinc-800 text-shadow-2xs">
             Manage clients, quotations, event timelines, and operational workflows in one protected command center.
           </p>
         </div>
 
-        <div className="space-y-3 text-sm text-cyan-100">
+        <div className="space-y-3 text-sm text-gray-600">
           <p className="flex items-center gap-2">
             <ShieldCheck size={16} />
             Registration is disabled on the website.
           </p>
-          <p className="text-cyan-200/90">Create admin users from Postman using the secure setup key.</p>
+          <p className="text-gray-500">Create admin users from Postman using the secure setup key.</p>
         </div>
       </section>
 
+      {/* Right Panel - Login Form */}
       <section className="relative grid place-items-center">
-        <div className="w-full max-w-md rounded-3xl border border-white/70 bg-white/90 p-7 shadow-2xl shadow-slate-900/10 backdrop-blur md:p-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-700">Admin Access</p>
-          <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">Sign in</h2>
-          <p className="mt-2 text-sm text-slate-500">Use your admin credentials to enter the portal.</p>
+        <div className="w-full max-w-md rounded-3xl border border-[#FDC3A1]/40 bg-white/90 p-7 shadow-2xl shadow-gray-200/30 backdrop-blur md:p-8">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#F57799]">Admin Access</p>
+          <h2 className="mt-2 text-3xl font-bold tracking-tight text-gray-800">Sign in</h2>
+          <p className="mt-2 text-sm text-gray-500">Use your admin credentials to enter the portal.</p>
 
           {err ? (
-            <div className="mt-5 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <div className="mt-5 flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
               <AlertCircle size={16} className="mt-0.5 shrink-0" />
               <span>{err}</span>
             </div>
@@ -82,12 +85,12 @@ export default function LoginPage() {
 
           <form onSubmit={onSubmit} className="mt-5 space-y-4">
             <div>
-              <label className="text-sm font-medium text-slate-700">Email</label>
-              <div className="mt-2 flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 focus-within:border-cyan-300 focus-within:bg-white">
-                <Mail size={18} className="text-slate-500" />
+              <label className="text-sm font-medium text-gray-700">Email</label>
+              <div className="mt-2 flex items-center gap-2 rounded-xl border border-[#FDC3A1]/40 bg-[#FFF7CD]/30 px-3 py-3 focus-within:border-[#F57799]/50 focus-within:bg-white">
+                <Mail size={18} className="text-gray-400" />
                 <input
                   type="email"
-                  className="w-full bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400"
+                  className="w-full bg-transparent text-sm text-gray-800 outline-none placeholder:text-gray-400"
                   placeholder="admin@cityview.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -97,12 +100,12 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="text-sm font-medium text-slate-700">Password</label>
-              <div className="mt-2 flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 focus-within:border-cyan-300 focus-within:bg-white">
-                <Lock size={18} className="text-slate-500" />
+              <label className="text-sm font-medium text-gray-700">Password</label>
+              <div className="mt-2 flex items-center gap-2 rounded-xl border border-[#FDC3A1]/40 bg-[#FFF7CD]/30 px-3 py-3 focus-within:border-[#F57799]/50 focus-within:bg-white">
+                <Lock size={18} className="text-gray-400" />
                 <input
                   type={show ? "text" : "password"}
-                  className="w-full bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400"
+                  className="w-full bg-transparent text-sm text-gray-800 outline-none placeholder:text-gray-400"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -111,7 +114,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShow((prev) => !prev)}
-                  className="text-slate-500 transition hover:text-slate-700"
+                  className="text-gray-400 transition hover:text-gray-600"
                   aria-label={show ? "Hide password" : "Show password"}
                 >
                   {show ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -122,14 +125,14 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-cyan-700/30 transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-xl bg-gradient-to-r from-[#F57799] to-[#FB9B8F] px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-[#F57799]/30 transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? "Signing in..." : "Sign in to admin portal"}
             </button>
           </form>
 
-          <p className="mt-4 text-xs text-slate-500">
-            Admin onboarding: use <span className="font-semibold text-slate-700">POST /api/auth/register</span> from Postman with setup key.
+          <p className="mt-4 text-xs text-gray-500">
+            Admin onboarding: use <span className="font-semibold text-gray-700">POST /api/auth/register</span> from Postman with setup key.
           </p>
         </div>
       </section>

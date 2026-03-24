@@ -49,7 +49,7 @@ export default function DashboardPage() {
 
       {loading ? (
         <Panel title="Loading dashboard" subtitle="Fetching metrics from /reports/dashboard">
-          <p className="text-sm text-[var(--ink-soft)]">Please wait while the admin summary is being prepared.</p>
+          <p className="text-sm text-gray-500">Please wait while the admin summary is being prepared.</p>
         </Panel>
       ) : null}
 
@@ -71,24 +71,27 @@ export default function DashboardPage() {
               <div className="space-y-3">
                 {statusBreakdown.length ? (
                   statusBreakdown.map((item) => (
-                    <div key={item.status} className="flex items-center justify-between rounded-2xl border border-[var(--line)] bg-white px-4 py-3">
+                    <div
+                      key={item.status}
+                      className="flex items-center justify-between rounded-2xl border border-[#FDC3A1]/30 bg-white px-4 py-3"
+                    >
                       <div>
-                        <p className="text-sm font-semibold capitalize text-[var(--foreground)]">{item.status}</p>
-                        <p className="text-xs text-[var(--ink-soft)]">Quotation versions</p>
+                        <p className="text-sm font-semibold capitalize text-gray-800">{item.status}</p>
+                        <p className="text-xs text-gray-500">Quotation versions</p>
                       </div>
-                      <div className="rounded-full bg-[rgba(201,111,74,0.12)] px-3 py-1 text-sm font-semibold text-[var(--accent-deep)]">
+                      <div className="rounded-full bg-[#F57799]/10 px-3 py-1 text-sm font-semibold text-[#F57799]">
                         {item.total}
                       </div>
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-[var(--ink-soft)]">No quotation versions found yet.</p>
+                  <p className="text-sm text-gray-500">No quotation versions found yet.</p>
                 )}
               </div>
             </Panel>
 
             <Panel title="Operational sequence" subtitle="Recommended backend-aligned workflow for the admin team.">
-              <ol className="grid gap-3 text-sm text-[var(--ink-soft)] md:grid-cols-2">
+              <ol className="grid gap-3 text-sm text-gray-500 md:grid-cols-2">
                 {[
                   "Register admin from Postman, then sign in on the portal.",
                   "Create clients before capturing event enquiries.",
@@ -98,9 +101,14 @@ export default function DashboardPage() {
                   "Initialize quotations per event and create versions.",
                   "Accept a quotation version to convert it into revenue and reporting.",
                 ].map((step, index) => (
-                  <li key={step} className="rounded-[1.5rem] border border-[var(--line)] bg-white px-4 py-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--accent-deep)]">Step {index + 1}</p>
-                    <p className="mt-2">{step}</p>
+                  <li
+                    key={step}
+                    className="rounded-[1.5rem] border border-[#FDC3A1]/30 bg-white px-4 py-4"
+                  >
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#F57799]">
+                      Step {index + 1}
+                    </p>
+                    <p className="mt-2 text-gray-800">{step}</p>
                   </li>
                 ))}
               </ol>
@@ -118,7 +126,9 @@ export default function DashboardPage() {
                 {
                   key: "event_status",
                   label: "Status",
-                  render: (row) => <span className="capitalize text-[var(--foreground)]">{row.event_status}</span>,
+                  render: (row) => (
+                    <span className="capitalize text-gray-800">{row.event_status}</span>
+                  ),
                 },
               ]}
               rows={upcomingEvents}
