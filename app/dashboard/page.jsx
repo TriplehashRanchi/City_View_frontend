@@ -36,12 +36,21 @@ export default function DashboardPage() {
   const metrics = report?.metrics || {};
   const statusBreakdown = report?.statusBreakdown || [];
   const upcomingEvents = report?.upcomingEvents || [];
+//Greetings Time
+  const getGreeting = () => {
+  const hour = new Date().getHours();
+
+  if (hour < 12) return "Good Morning";
+  if (hour < 17) return "Good Afternoon";
+  if (hour < 21) return "Good Evening";
+  return "Good Night";
+};
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       <PageIntro
         eyebrow="Control Center"
-        title={`Welcome${admin?.name ? `, ${admin.name}` : ""}`}
+        title={`${getGreeting()}${admin?.name ? `, ${admin.name}` : ""}`}
         description="This dashboard reads from the live reporting endpoint and shows event volume, quotation movement, accepted revenue, and upcoming operations."
       />
 
