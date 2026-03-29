@@ -73,7 +73,7 @@ export default function DashboardPage() {
                   statusBreakdown.map((item) => (
                     <div
                       key={item.status}
-                      className="flex items-center justify-between rounded-2xl border border-[#FDC3A1]/30 bg-white px-4 py-3"
+                      className="flex items-center justify-between rounded-2xl border border-[#FDC3A1]/30 bg-amber-100 px-4 py-3"
                     >
                       <div>
                         <p className="text-sm font-semibold capitalize text-gray-800">{item.status}</p>

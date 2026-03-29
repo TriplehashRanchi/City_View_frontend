@@ -199,6 +199,8 @@ export default function QuotationsPage() {
     }
   };
 
+  const [openPopup, setPopup] = useState(false);
+
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       <PageIntro
@@ -206,6 +208,130 @@ export default function QuotationsPage() {
         title="Quotation desk"
         description="Initialize quotations per event, create versions using packages and custom items, then accept a version to complete the booking flow."
       />
+      <PrimaryButton type="button" onClick={()=>setPopup(true)}>
+        + New Quotation
+      </PrimaryButton>
+
+      {
+        openPopup &&
+         <div className="fixed inset-0 backdrop-blur-sm bg-black/10 flex justify-center items-center z-50">
+            <div className="bg-white w-200 h-120 overflow-y-auto p-8 rounded-lg">
+              <div className="w-full flex justify-between">
+                <p className="font-semibold">Quotation setup</p>
+                <SecondaryButton onClick={()=>setPopup(false)}>X</SecondaryButton>
+              </div>
+
+              <div className="w-full flex flex-col space-y-5">
+                <Field label="Event">
+                <Select value={selectedEventId} onChange={(event) => setSelectedEventId(event.target.value)}>
+                  <option value="">Select event</option>
+                  {events.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.client_name} - {item.occasion_type} - {item.event_date}
+                    </option>
+                  ))}
+                </Select>
+                </Field>
+
+                <form className="space-y-4" onSubmit={onCreateVersion}>
+                <Field label="Selected quotation">
+                  <Select value={versionForm.quotationId} onChange={onVersionFieldChange("quotationId")} required>
+                    <option value="">Select quotation</option>
+                    {quotations.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.quote_code}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Field label="Valid until">
+                    <TextInput value={versionForm.validUntil} onChange={onVersionFieldChange("validUntil")} type="date" />
+                  </Field>
+                  <Field label="Discount type">
+                    <Select value={versionForm.discountType} onChange={onVersionFieldChange("discountType")}>
+                      <option value="none">None</option>
+                      <option value="flat">Flat</option>
+                      <option value="percentage">Percentage</option>
+                    </Select>
+                  </Field>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Field label="Discount value">
+                    <TextInput value={versionForm.discountValue} onChange={onVersionFieldChange("discountValue")} type="number" step="0.01" min="0" />
+                  </Field>
+                  <Field label="Manual adjustment">
+                    <TextInput value={versionForm.manualAdjustment} onChange={onVersionFieldChange("manualAdjustment")} type="number" step="0.01" />
+                  </Field>
+                </div>
+
+                <Field label="Package">
+                  <Select value={versionForm.packageId} onChange={onVersionFieldChange("packageId")}>
+                    <option value="">No package</option>
+                    {packages.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Field label="Package guest count">
+                    <TextInput value={versionForm.packageGuestCount} onChange={onVersionFieldChange("packageGuestCount")} type="number" min="1" placeholder="Use event guest count if blank" />
+                  </Field>
+                  <Field label="Package quantity">
+                    <TextInput value={versionForm.packageQuantity} onChange={onVersionFieldChange("packageQuantity")} type="number" min="0.01" step="0.01" />
+                  </Field>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Field label="Extra service">
+                    <Select value={versionForm.extraServiceId} onChange={onVersionFieldChange("extraServiceId")}>
+                      <option value="">No extra service</option>
+                      {services.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.name}
+                        </option>
+                      ))}
+                    </Select>
+                  </Field>
+                  <Field label="Extra service override price">
+                    <TextInput value={versionForm.extraServicePrice} onChange={onVersionFieldChange("extraServicePrice")} type="number" min="0" step="0.01" placeholder="4500" />
+                  </Field>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Field label="Custom item name">
+                    <TextInput value={versionForm.customName} onChange={onVersionFieldChange("customName")} placeholder="Decoration" />
+                  </Field>
+                  <Field label="Custom item price">
+                    <TextInput value={versionForm.customPrice} onChange={onVersionFieldChange("customPrice")} type="number" min="0" step="0.01" placeholder="12000" />
+                  </Field>
+                </div>
+
+                <Field label="Custom item description">
+                  <TextArea value={versionForm.customDescription} onChange={onVersionFieldChange("customDescription")} placeholder="Stage and floral decoration" />
+                </Field>
+
+                <Field label="Terms and conditions">
+                  <TextArea value={versionForm.termsAndConditions} onChange={onVersionFieldChange("termsAndConditions")} placeholder="50% advance required before production begins." />
+                </Field>
+
+                <Field label="Customer notes">
+                  <TextArea value={versionForm.customerNotes} onChange={onVersionFieldChange("customerNotes")} placeholder="Best package for the selected venue and guest count." />
+                </Field>
+
+                <PrimaryButton type="submit" disabled={busy || !versionForm.quotationId}>
+                  {busy ? "Saving..." : "Create quotation version"}
+                </PrimaryButton>
+              </form>
+          </div>
+      </div>
+    </div>
+  }
 
       <MessageBanner tone="success" message={message} />
       <MessageBanner tone="danger" message={error} />

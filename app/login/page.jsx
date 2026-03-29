@@ -125,7 +125,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl bg-gradient-to-r from-[#F57799] to-[#FB9B8F] px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-[#F57799]/30 transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-xl bg-linear-to-r from-[#F57799] to-[#FB9B8F] px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-[#F57799]/30 transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? "Signing in..." : "Sign in to admin portal"}
             </button>
