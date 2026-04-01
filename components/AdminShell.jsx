@@ -78,8 +78,8 @@ export default function AdminShell({ children }) {
 
   if (checkingAuth) {
     return (
-      <main className="grid min-h-screen place-items-center bg-slate-100 p-6">
-        <div className="rounded-2xl border border-white/70 bg-white/90 px-6 py-4 text-sm font-medium text-slate-600 shadow-lg">
+      <main className="grid min-h-screen place-items-center bg-[#FFF7CD] p-6">
+        <div className="rounded-2xl border border-[#FDC3A1]/50 bg-white/90 px-6 py-4 text-sm font-medium text-gray-600 shadow-lg">
           Verifying admin session...
         </div>
       </main>
@@ -87,15 +87,16 @@ export default function AdminShell({ children }) {
   }
 
   if (isPublicRoute) {
-    return <main className="min-h-screen">{children}</main>;
+    return <main className="min-h-screen bg-[#FFF7CD]">{children}</main>;
   }
 
   if (!isAuthenticated) return null;
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-slate-100">
-      <div className="pointer-events-none absolute -top-48 right-[-120px] h-96 w-96 rounded-full bg-cyan-300/25 blur-3xl" />
-      <div className="pointer-events-none absolute bottom-0 left-[-120px] h-80 w-80 rounded-full bg-indigo-300/20 blur-3xl" />
+    <div className="relative min-h-screen overflow-hidden bg-white">
+      {/* Warm decorative blurs */}
+      <div className="pointer-events-none absolute -top-48 right-[-120px] h-96 w-96 rounded-full bg-[#FDC3A1]/40 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-0 left-[-120px] h-80 w-80 rounded-full bg-[#FB9B8F]/30 blur-3xl" />
 
       <Sidebar isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
 
