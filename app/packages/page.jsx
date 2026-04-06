@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import {
   DataTable,
   Field,
+  LoadingInline,
+  LoadingState,
   MessageBanner,
   PageIntro,
   Panel,
@@ -209,14 +211,14 @@ export default function PackagesPage() {
             <MessageBanner tone="danger" message={error} />
 
             <PrimaryButton type="submit" disabled={submitting}>
-              {submitting ? "Creating package..." : "Create package"}
+              {submitting ? <LoadingInline label="Creating package..." /> : "Create package"}
             </PrimaryButton>
           </form>
         </Panel>
 
         <Panel title="Saved packages" subtitle="Existing packages available for quotation versions.">
           {loading ? (
-            <p className="text-sm text-[var(--ink-soft)]">Loading packages...</p>
+            <LoadingState label="Loading packages..." />
           ) : (
             <DataTable
               columns={[

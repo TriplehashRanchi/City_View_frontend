@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import {
   DataTable,
   Field,
+  LoadingInline,
+  LoadingState,
   MessageBanner,
   PageIntro,
   Panel,
@@ -117,14 +119,14 @@ export default function ServicesPage() {
             <MessageBanner tone="danger" message={error} />
 
             <PrimaryButton type="submit" disabled={submitting}>
-              {submitting ? "Creating service..." : "Create service"}
+              {submitting ? <LoadingInline label="Creating service..." /> : "Create service"}
             </PrimaryButton>
           </form>
         </Panel>
 
         <Panel title="Services" subtitle="Live list from the backend service table.">
           {loading ? (
-            <p className="text-sm text-[var(--ink-soft)]">Loading services...</p>
+            <LoadingState label="Loading services..." />
           ) : (
             <DataTable
               columns={[

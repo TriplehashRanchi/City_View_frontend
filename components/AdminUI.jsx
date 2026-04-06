@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 export function PageIntro({ eyebrow, title, description, action }) {
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -182,3 +184,36 @@ export function MessageBanner({ tone = "neutral", message }) {
   return <div className={`rounded-2xl border px-4 py-3 text-sm ${styles[tone] || styles.neutral}`}>{message}</div>;
 }
 
+export function LoadingState({ label = "Loading...", className = "" }) {
+  return (
+    <div className={`flex items-center justify-center py-12 ${className}`}>
+      <div className="text-center">
+        <Image
+          src="/loding.png"
+          alt={label}
+          width={72}
+          height={72}
+          className="mx-auto h-[72px] w-[72px] object-contain"
+          priority
+        />
+        <p className="mt-3 text-sm text-gray-500">{label}</p>
+      </div>
+    </div>
+  );
+}
+
+export function LoadingInline({ label = "Loading...", className = "" }) {
+  return (
+    <span className={`inline-flex items-center justify-center gap-2 ${className}`}>
+      <Image
+        src="/loding.png"
+        alt=""
+        width={20}
+        height={20}
+        className="h-5 w-5 object-contain"
+        aria-hidden="true"
+      />
+      <span>{label}</span>
+    </span>
+  );
+}

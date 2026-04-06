@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PageIntro, Panel, StatCard, MessageBanner, DataTable } from "@/components/AdminUI";
+import { PageIntro, Panel, StatCard, MessageBanner, DataTable, LoadingState } from "@/components/AdminUI";
 import { reportsApi } from "@/services/modules";
 import { auth } from "@/services/auth";
 
@@ -59,7 +59,7 @@ export default function DashboardPage() {
 
       {loading ? (
         <Panel title="Loading dashboard" subtitle="Fetching metrics from /reports/dashboard">
-          <p className="text-sm text-gray-500">Please wait while the admin summary is being prepared.</p>
+          <LoadingState label="Loading dashboard..." className="py-6" />
         </Panel>
       ) : null}
 

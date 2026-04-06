@@ -1,6 +1,7 @@
 import { Fraunces, Manrope } from "next/font/google";
 import "./globals.css";
 import AdminShell from "@/components/AdminShell";
+import { ToastProvider } from "@/components/ToastProvider";
 
 const bodyFont = Manrope({
   variable: "--font-manrope",
@@ -21,7 +22,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${bodyFont.variable} ${displayFont.variable} antialiased`}>
-        <AdminShell>{children}</AdminShell>
+        <ToastProvider>
+          <AdminShell>{children}</AdminShell>
+        </ToastProvider>
       </body>
     </html>
   );

@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   CalendarDays,
-  ClipboardList,
   Boxes,
   Users2,
   FileBadge,
@@ -16,6 +15,8 @@ import {
   Package,
   UtensilsCrossed,
   ChevronRight,
+  ArrowLeftToLine,
+  ArrowRightToLine,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { auth } from "@/services/auth";
@@ -43,7 +44,12 @@ const navigation = [
   },
 ];
 
-export default function Sidebar({ isOpen = false, onClose = () => {} }) {
+export default function Sidebar({
+  isOpen = false,
+  isCollapsed = false,
+  onClose = () => {},
+  onToggleCollapse = () => {},
+}) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -64,19 +70,21 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
 
       {/* Sidebar Container */}
       <aside
-        className={`fixed top-0 left-0 z-50 flex h-screen w-72 flex-col border-r border-green-100 bg-white text-gray-700 transition-all duration-500 ease-in-out md:z-20 md:translate-x-0 ${
+        className={`fixed top-0 left-0 z-50 flex h-screen flex-col border-r border-green-100 bg-white text-gray-700 transition-all duration-300 ease-in-out md:z-20 md:translate-x-0 ${
+          isCollapsed ? "md:w-24" : "md:w-72"
+        } ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         {/* Brand Header */}
-        <div className="relative flex h-24 items-center justify-between px-8">
-          <div className="flex items-center gap-3">
+        <div className={`relative flex h-24 items-center justify-between ${isCollapsed ? "px-4" : "px-8"}`}>
+          <div className={`flex items-center ${isCollapsed ? "justify-center" : "gap-3"}`}>
             <div className="flex h-10 w-10 items-center justify-center border border-green-100 rounded-xl bg-gradient-to-br from-green-50 via-green-100/50 to-green-100  p-[1px]">
               <div className="flex h-full w-full items-center justify-center rounded-[11px] bg-white">
                 <Boxes size={20} className="text-green-500" />
               </div>
             </div>
-            <div>
+            <div className={`${isCollapsed ? "hidden" : "block"}`}>
               <h1 className="text-lg font-bold tracking-tight text-gray-800">
                 City<span className="text-green-500">View</span>
               </h1>
@@ -88,21 +96,31 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
               </div>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="rounded-full p-1 hover:bg-gray-100 md:hidden"
-          >
-            <X size={20} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onToggleCollapse}
+              className="hidden rounded-xl  p-2 text-gray-500 transition cursor-pointer hover:text-green-600 md:flex"
+              aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              {isCollapsed ? <ArrowRightToLine size={18} /> : <ArrowLeftToLine size={18} />}
+            </button>
+            <button onClick={onClose} className="rounded-full p-1 hover:bg-gray-100 md:hidden">
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         {/* Navigation */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 custom-scrollbar">
+        <div className={`flex-1 overflow-y-auto py-4 custom-scrollbar ${isCollapsed ? "px-3" : "px-4"}`}>
           {navigation.map((group, idx) => (
             <div key={idx} className="mb-8">
-              <h2 className="mb-3 px-4 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">
-                {group.group}
-              </h2>
+              {!isCollapsed ? (
+                <h2 className="mb-3 px-4 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">
+                  {group.group}
+                </h2>
+              ) : null}
               <div className="space-y-1">
                 {group.items.map((item) => {
                   const Icon = item.icon;
@@ -113,7 +131,10 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
                       key={item.path}
                       href={item.path}
                       onClick={onClose}
-                      className={`group relative flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-300 ${
+                      title={item.name}
+                      className={`group relative flex items-center rounded-xl text-sm font-medium transition-all duration-300 ${
+                        isCollapsed ? "justify-center px-3 py-3.5" : "gap-3 px-4 py-3"
+                      } ${
                         active
                           ? "bg-gradient-to-r from-green-100 to-transparent text-green-500"
                           : "hover:bg-gray-100 hover:text-gray-900"
@@ -132,46 +153,39 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
                             : "group-hover:text-gray-700"
                         }`}
                       />
-                      <span className="flex-1">{item.name}</span>
-                      {active && <ChevronRight size={14} className="opacity-50" />}
+                      {!isCollapsed ? <span className="flex-1">{item.name}</span> : null}
+                      {active && !isCollapsed ? <ChevronRight size={14} className="opacity-50" /> : null}
                     </Link>
                   );
                 })}
               </div>
             </div>
           ))}
-
-          {/* Premium Feature Card */}
-          <div className="relative mt-4 overflow-hidden rounded-2xl bg-gradient-to-br from-green-50 to-green-100 p-5 border border-green-100">
-            <div className="relative z-10">
-              <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-lg bg-green-500/20 text-green-500">
-                <Sparkles size={16} />
-              </div>
-              <p className="text-xs font-semibold text-gray-800">Workflow Map</p>
-              <p className="mt-1 text-[11px] leading-relaxed text-gray-500">
-                Move from client creation to accepted quotation without leaving the admin workspace.
-              </p>
-              <div className="mt-4 rounded-lg border border-green-200 bg-white/50 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-gray-500">
-                Clients &gt; Events &gt; Quotations
-              </div>
-            </div>
-            {/* Decorative background glow */}
-            <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-green-500/20 blur-2xl" />
-          </div>
         </div>
 
         {/* User Profile / Footer */}
         <div className="border-t border-[#FDC3A1]/30 p-4">
-          <div className="flex items-center gap-3 rounded-xl bg-gray-50 p-3 border border-[#FDC3A1]/30">
+          <div
+            className={`rounded-xl border border-[#FDC3A1]/30 bg-gray-50 p-3 ${
+              isCollapsed ? "flex flex-col items-center gap-3" : "flex items-center gap-3"
+            }`}
+          >
             <div className="relative grid h-9 w-9 place-items-center rounded-lg bg-[#F57799] font-semibold text-white">
               A
               <div className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-500"></div>
             </div>
-            <div className="flex flex-1 flex-col overflow-hidden">
-              <p className="truncate text-xs font-bold text-gray-800">Admin Session</p>
-              <p className="truncate text-[10px] text-gray-500">Secure event operations</p>
-            </div>
-            <button onClick={onLogout} className="text-gray-400 hover:text-red-500 transition-colors">
+            {!isCollapsed ? (
+              <div className="flex flex-1 flex-col overflow-hidden">
+                <p className="truncate text-xs font-bold text-gray-800">Admin Session</p>
+                <p className="truncate text-[10px] text-gray-500">Secure event operations</p>
+              </div>
+            ) : null}
+            <button
+              onClick={onLogout}
+              className="text-gray-400 transition-colors hover:text-red-500"
+              title="Sign out"
+              aria-label="Sign out"
+            >
               <LogOut size={16} />
             </button>
           </div>

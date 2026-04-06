@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import {
   DataTable,
   Field,
+  LoadingInline,
+  LoadingState,
   MessageBanner,
   PageIntro,
   Panel,
@@ -12,6 +14,7 @@ import {
   TextArea,
   TextInput,
 } from "@/components/AdminUI";
+import { useToast } from "@/components/ToastProvider";
 import { catalogApi } from "@/services/modules";
 
 const initialForm = {
@@ -24,6 +27,7 @@ const initialForm = {
 };
 
 export default function ProductsPage() {
+  const { toast } = useToast();
   const [products, setProducts] = useState([]);
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(true);
@@ -66,9 +70,20 @@ export default function ProductsPage() {
       });
       setForm(initialForm);
       setMessage("Product created successfully.");
+      toast({
+        variant: "success",
+        title: "Product saved successfully",
+        description: `${form.name?.trim() || "Product"} has been added to the catalog.`,
+      });
       await loadProducts();
     } catch (err) {
-      setError(err?.response?.data?.message || "Unable to create product.");
+      const message = err?.response?.data?.message || "Unable to create product.";
+      setError(message);
+      toast({
+        variant: "error",
+        title: "Product not saved",
+        description: message,
+      });
     } finally {
       setSubmitting(false);
     }
@@ -195,7 +210,7 @@ export default function ProductsPage() {
                 </button>
 
                 <PrimaryButton type="submit" disabled={submitting}>
-                  {submitting ? "Creating..." : "Create"}
+                  {submitting ? <LoadingInline label="Creating..." /> : "Create"}
                 </PrimaryButton>
               </div>
             </form>
@@ -207,9 +222,7 @@ export default function ProductsPage() {
       <div className="space-y-6">
         <Panel title="Products" subtitle="List of All Products">
           {loading ? (
-            <p className="text-sm text-[var(--ink-soft)]">
-              Loading products...
-            </p>
+            <LoadingState label="Loading products..." />
           ) : (
             <div>
 

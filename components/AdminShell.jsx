@@ -10,9 +10,21 @@ export default function AdminShell({ children }) {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const isPublicRoute = pathname === "/" || pathname === "/login";
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const savedState = window.localStorage.getItem("cityview.sidebarCollapsed");
+    setSidebarCollapsed(savedState === "true");
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem("cityview.sidebarCollapsed", String(sidebarCollapsed));
+  }, [sidebarCollapsed]);
 
   useEffect(() => {
     let active = true;
@@ -98,9 +110,14 @@ export default function AdminShell({ children }) {
       <div className="pointer-events-none absolute -top-48 right-[-120px] h-96 w-96 " />
       <div className="pointer-events-none absolute bottom-0 left-[-120px] h-80 w-80 " />
 
-      <Sidebar isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
+      <Sidebar
+        isOpen={mobileMenuOpen}
+        isCollapsed={sidebarCollapsed}
+        onClose={() => setMobileMenuOpen(false)}
+        onToggleCollapse={() => setSidebarCollapsed((current) => !current)}
+      />
 
-      <div className="md:pl-72">
+      <div className={`transition-[padding] duration-300 ${sidebarCollapsed ? "md:pl-24" : "md:pl-72"}`}>
         <TopNavbar onMenuClick={() => setMobileMenuOpen(true)} />
         <main className="relative z-10 p-4 md:p-8">{children}</main>
       </div>
