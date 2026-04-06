@@ -36,17 +36,18 @@ export default function DashboardPage() {
   const metrics = report?.metrics || {};
   const statusBreakdown = report?.statusBreakdown || [];
   const upcomingEvents = report?.upcomingEvents || [];
-//Greetings Time
+  //Greetings Time
   const getGreeting = () => {
-  const hour = new Date().getHours();
+    const hour = new Date().getHours();
 
-  if (hour < 12) return "Good Morning";
-  if (hour < 17) return "Good Afternoon";
-  if (hour < 21) return "Good Evening";
-  return "Good Night";
-};
+    if (hour < 12) return "Good Morning";
+    if (hour < 17) return "Good Afternoon";
+    if (hour < 21) return "Good Evening";
+    return "Good Night";
+  };
 
   return (
+
     <div className="mx-auto max-w-7xl space-y-6">
       <PageIntro
         eyebrow="Control Center"
@@ -75,54 +76,41 @@ export default function DashboardPage() {
             />
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-            <Panel title="Quotation status mix" subtitle="Grouped by quotation version status.">
+          <div className="space-y-6">
+            <Panel
+              title="Quotations status "
+              subtitle="Grouped by quotation version status."
+            >
               <div className="space-y-3">
                 {statusBreakdown.length ? (
                   statusBreakdown.map((item) => (
                     <div
                       key={item.status}
-                      className="flex items-center justify-between rounded-2xl border border-[#FDC3A1]/30 bg-amber-100 px-4 py-3"
+                      className="flex items-center justify-between rounded-2xl border border-green-200 bg-green-50  px-4 py-3"
                     >
-                      <div>
-                        <p className="text-sm font-semibold capitalize text-gray-800">{item.status}</p>
-                        <p className="text-xs text-gray-500">Quotation versions</p>
+                      <div >
+                        <p className="text-lg font-semibold capitalize text-gray-800">
+                          {item.status}
+                        </p>
+                        <p className="text-[15px] text-gray-500">
+                          Quotation versions
+                        </p>
                       </div>
-                      <div className="rounded-full bg-[#F57799]/10 px-3 py-1 text-sm font-semibold text-[#F57799]">
+
+                      <div className="rounded-full border border-green-600 px-3 py-1 text-sm font-semibold text-green-600">
                         {item.total}
                       </div>
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-gray-500">No quotation versions found yet.</p>
+                  <p className="text-sm text-gray-500">
+                    No quotation versions found yet.
+                  </p>
                 )}
               </div>
             </Panel>
-
-            <Panel title="Operational sequence" subtitle="Recommended backend-aligned workflow for the admin team.">
-              <ol className="grid gap-3 text-sm text-gray-500 md:grid-cols-2">
-                {[
-                  "Register admin from Postman, then sign in on the portal.",
-                  "Create clients before capturing event enquiries.",
-                  "Build product and service catalogs.",
-                  "Assemble reusable packages from those catalog items.",
-                  "Create events for real client requirements.",
-                  "Initialize quotations per event and create versions.",
-                  "Accept a quotation version to convert it into revenue and reporting.",
-                ].map((step, index) => (
-                  <li
-                    key={step}
-                    className="rounded-[1.5rem] border border-[#FDC3A1]/30 bg-white px-4 py-4"
-                  >
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#F57799]">
-                      Step {index + 1}
-                    </p>
-                    <p className="mt-2 text-gray-800">{step}</p>
-                  </li>
-                ))}
-              </ol>
-            </Panel>
           </div>
+
 
           <Panel title="Upcoming events" subtitle="Next ten events from the reporting endpoint.">
             <DataTable

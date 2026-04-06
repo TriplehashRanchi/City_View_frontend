@@ -95,8 +95,8 @@ export default function AdminShell({ children }) {
   return (
     <div className="relative min-h-screen overflow-hidden bg-white">
       {/* Warm decorative blurs */}
-      <div className="pointer-events-none absolute -top-48 right-[-120px] h-96 w-96 rounded-full bg-[#FDC3A1]/40 blur-3xl" />
-      <div className="pointer-events-none absolute bottom-0 left-[-120px] h-80 w-80 rounded-full bg-[#FB9B8F]/30 blur-3xl" />
+      <div className="pointer-events-none absolute -top-48 right-[-120px] h-96 w-96 " />
+      <div className="pointer-events-none absolute bottom-0 left-[-120px] h-80 w-80 " />
 
       <Sidebar isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
 

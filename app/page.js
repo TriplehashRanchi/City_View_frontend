@@ -46,38 +46,40 @@ export default function Home() {
   return (
     <div className="relative overflow-hidden bg-white text-gray-800">
       {/* Decorative blurs using warm colors */}
-      <div className="pointer-events-none absolute left-[-10rem] top-16 h-80 w-80 rounded-full bg-[#FDC3A1]/40 blur-3xl" />
-      <div className="pointer-events-none absolute right-[-8rem] top-0 h-[32rem] w-[32rem] rounded-full bg-[#FB9B8F]/30 blur-3xl" />
+      <div className="pointer-events-none absolute left-[-10rem] top-16 h-80 w-80 " />
+      <div className="pointer-events-none absolute right-[-8rem] top-0 h-[32rem] w-[32rem] " />
 
-      <header className="sticky top-0 z-20 border-b border-[#FDC3A1]/30 bg-white/80 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 md:px-8">
+      <header className="sticky top-0 z-20 border-b border-gray-100 bg-green-50 backdrop-blur-xl">
+      
+        {/* <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 md:px-8"> */}
+        <div className="mx-auto flex max-w-[90rem] items-center justify-between px-3 py-4 md:px-4">
           <Link href="/" className="flex items-center gap-3">
             <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gray-800 text-white shadow-lg">
               <Sparkles size={18} />
             </div>
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-[#F57799]">CityView</p>
-              <p className="font-[var(--font-fraunces)] text-lg font-semibold">Events & Admin</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.35em] text-green-900">CityView</p>
+              {/* <p className="font-[var(--font-fraunces)] text-lg font-semibold">Events & Admin</p> */}
             </div>
           </Link>
 
-          <nav className="hidden items-center gap-8 text-sm font-semibold text-gray-500 md:flex">
+          <nav className="hidden items-center gap-8 text-md font-semibold text-gray-500 md:flex">
             <a href="#home" className="transition hover:text-gray-800">Home</a>
             <a href="#about" className="transition hover:text-gray-800">About</a>
             <a href="#services" className="transition hover:text-gray-800">Services</a>
-            <a href="#footer" className="transition hover:text-gray-800">Footer</a>
+            <a href="#footer" className="transition hover:text-gray-800">Contact Us</a>
           </nav>
 
           <div className="flex items-center gap-3">
             <Link
               href="/login"
-              className="hidden rounded-full border border-[#FDC3A1]/50 px-5 py-2.5 text-sm font-semibold text-gray-800 transition hover:border-[#F57799]/70 hover:bg-white md:inline-flex"
+              className="hidden rounded-full border border-black/50 px-5 py-2.5 text-sm font-semibold text-gray-800 transition   md:inline-flex"
             >
               Admin Login
             </Link>
             <a
               href="#services"
-              className="inline-flex rounded-full bg-linear-to-br from-white to-[#F57799] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:translate-y-[-1px]"
+              className="inline-flex rounded-full bg-linear-to-br  from-white to-green-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:translate-y-[-1px]"
             >
               Explore
             </a>
@@ -85,16 +87,17 @@ export default function Home() {
         </div>
       </header>
 
-      <main id="home">
-        <section className="mx-auto grid max-w-7xl gap-12 px-5 py-14 md:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:py-24">
+      <main id="home" className="bg-green-50">
+        {/* <section className="mx-auto grid max-w-7xl bg-green-50 gap-12 px-5 py-14 md:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:py-24"> */}
+        <section className="mx-auto grid max-w-[90rem] gap-12 px-3 py-14 md:px-4 lg:grid-cols-[1.1fr_0.9fr]">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#F57799]/30 bg-[#FFF7CD]/60 px-4 py-2 text-xs font-bold uppercase tracking-[0.3em] text-[#F57799]">
+            {/* <div className="inline-flex items-center gap-2 rounded-full border border-[#F57799]/30 bg-[#FFF7CD]/60 px-4 py-2 text-xs font-bold uppercase tracking-[0.3em] text-[#F57799]">
               <ShieldCheck size={14} />
               Refined Event Operations
-            </div>
-
-            <h1 className="mt-6 max-w-3xl font-[var(--font-fraunces)] text-5xl font-semibold leading-[0.95] tracking-[-0.03em] text-gray-800 md:text-7xl">
-              CityView crafts polished event experiences with a calm, premium admin core.
+            </div> */}
+               {/* CityView crafts polished event experiences with a calm, premium admin core. */}
+            <h1 className="mt-6 max-w-4xl  text-4xl font-semibold leading-[0.95] tracking-[-0.03em] text-gray-800 md:text-7xl">
+               CityView crafts  polished event experiences with a calm, premium admin core.
             </h1>
 
             <p className="mt-6 max-w-2xl text-lg leading-8 text-gray-600 md:text-xl">
@@ -105,20 +108,20 @@ export default function Home() {
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <a
                 href="#about"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-linear-to-br from-white to-[#F57799] px-6 py-3.5 text-sm font-bold text-white shadow-lg transition hover:translate-y-[-1px]"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-linear-to-br from-white to-green-600 px-6 py-3.5 text-sm font-bold text-white shadow-lg transition hover:translate-y-[-1px]"
               >
                 Explore CityView
                 <ArrowRight size={16} />
               </a>
               <Link
                 href="/login"
-                className="inline-flex items-center justify-center rounded-full border border-[#FDC3A1]/50 bg-white/90 px-6 py-3.5 text-sm font-bold text-gray-800 transition hover:bg-white"
+                className="inline-flex items-center justify-center rounded-full border border-green-300 bg-white/90 px-6 py-3.5 text-sm font-bold text-gray-800 transition hover:bg-white"
               >
                 Enter Admin Portal
               </Link>
             </div>
 
-            <div className="mt-10 grid gap-4 md:grid-cols-3">
+            {/* <div className="mt-10 grid gap-4 md:grid-cols-3">
               {stats.map((item) => (
                 <div
                   key={item.label}
@@ -128,12 +131,12 @@ export default function Home() {
                   <p className="mt-2 text-sm leading-6 text-gray-600">{item.label}</p>
                 </div>
               ))}
-            </div>
+            </div> */}
           </div>
 
           <div className="relative">
             {/* <div className="absolute -right-4 top-6 hidden h-24 w-24 rounded-[2rem] border border-white/60 bg-white/65 blur-[1px] md:block" /> */}
-            <div className="relative overflow-hidden rounded-[2rem] border border-[#FDC3A1]/30 bg-gradient-to-br from-[#FDC3A1]/20 to-[#FB9B8F]/20 p-6 text-gray-800 shadow-xl md:p-8">
+            {/* <div className="relative overflow-hidden rounded-[2rem] border border-[#FDC3A1]/30 bg-gradient-to-br from-[#FDC3A1]/20 to-[#FB9B8F]/20 p-6 text-gray-800 shadow-xl md:p-8">
               <div className="flex items-start justify-between gap-6">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#F57799]">Signature Flow</p>
@@ -169,7 +172,14 @@ export default function Home() {
                   </p>
                 </div>
               </div>
-            </div>
+            </div> */}
+              <img
+    src="https://i.pinimg.com/1200x/a1/d8/51/a1d851f047bce7b8a0f1dfc5d0c65307.jpg"
+    alt="Event"
+    className="w-full h-[570px] object-cover rounded-sm transition duration-500 hover:scale-105 "
+  />
+
+
           </div>
         </section>
 
