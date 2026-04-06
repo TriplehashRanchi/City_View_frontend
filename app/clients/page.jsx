@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   DataTable,
   Field,
@@ -28,6 +29,7 @@ const initialForm = {
 const itemsPerPage = 8;
 
 export default function ClientsPage() {
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [clients, setClients] = useState([]);
   const [form, setForm] = useState(initialForm);
@@ -36,7 +38,7 @@ export default function ClientsPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [showDrawer, setShowDrawer] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -86,6 +88,10 @@ export default function ClientsPage() {
   useEffect(() => {
     setCurrentPage(1);
   }, [deferredSearchTerm, statusFilter]);
+
+  useEffect(() => {
+    setSearchTerm(searchParams.get("search") || "");
+  }, [searchParams]);
 
   const onChange = (key) => (event) => {
     setForm((current) => ({ ...current, [key]: event.target.value }));

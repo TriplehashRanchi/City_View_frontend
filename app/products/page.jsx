@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   DataTable,
   Field,
@@ -27,6 +28,7 @@ const initialForm = {
 };
 
 export default function ProductsPage() {
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [products, setProducts] = useState([]);
   const [form, setForm] = useState(initialForm);
@@ -35,7 +37,7 @@ export default function ProductsPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
   const loadProducts = async () => {
     try {
       setLoading(true);
@@ -116,6 +118,10 @@ export default function ProductsPage() {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
+
+  useEffect(() => {
+    setSearchTerm(searchParams.get("search") || "");
+  }, [searchParams]);
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       <PageIntro

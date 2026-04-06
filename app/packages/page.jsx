@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   DataTable,
   Field,
@@ -31,6 +32,7 @@ const initialForm = {
 };
 
 export default function PackagesPage() {
+  const searchParams = useSearchParams();
   const [packages, setPackages] = useState([]);
   const [products, setProducts] = useState([]);
   const [services, setServices] = useState([]);
@@ -39,6 +41,7 @@ export default function PackagesPage() {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
 
   const loadData = async () => {
     try {
@@ -61,6 +64,10 @@ export default function PackagesPage() {
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    setSearchTerm(searchParams.get("search") || "");
+  }, [searchParams]);
 
   const onFieldChange = (key) => (event) => {
     setForm((current) => ({ ...current, [key]: event.target.value }));
@@ -117,6 +124,20 @@ export default function PackagesPage() {
     }
   };
 
+  const filteredPackages = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return packages;
+
+    return packages.filter((item) => {
+      return (
+        item.name?.toLowerCase().includes(term) ||
+        item.description?.toLowerCase().includes(term) ||
+        item.pricing_type?.toLowerCase().includes(term) ||
+        item.status?.toLowerCase().includes(term)
+      );
+    });
+  }, [packages, searchTerm]);
+
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       <PageIntro
@@ -124,6 +145,15 @@ export default function PackagesPage() {
         title="Package builder"
         description="Compose reusable packages from products and services. This matches the `packages`, `package_products`, and `package_services` tables."
       />
+
+      <div className="max-w-sm">
+        <TextInput
+          value={searchTerm}
+          onChange={(event) => setSearchTerm(event.target.value)}
+          placeholder="Search packages..."
+          className="bg-gray-50"
+        />
+      </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.1fr_1.1fr]">
         <Panel title="New package" subtitle="Build one reusable priceable package.">
@@ -228,9 +258,9 @@ export default function PackagesPage() {
                 { key: "minimum_guest_count", label: "Min guests" },
                 { key: "status", label: "Status" },
               ]}
-              rows={packages}
+              rows={filteredPackages}
               emptyTitle="No packages yet"
-              emptyDescription="Create a package after adding products and services."
+              emptyDescription="Create a package or change the search to see results."
             />
           )}
         </Panel>

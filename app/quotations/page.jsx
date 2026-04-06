@@ -95,7 +95,7 @@ export default function QuotationsPage() {
   const { toast } = useToast();
   const [quotations, setQuotations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -155,6 +155,10 @@ export default function QuotationsPage() {
   useEffect(() => {
     setCurrentPage(1);
   }, [deferredSearchTerm, statusFilter]);
+
+  useEffect(() => {
+    setSearchTerm(searchParams.get("search") || "");
+  }, [searchParams]);
 
   const filteredQuotations = useMemo(() => {
     const term = deferredSearchTerm.trim().toLowerCase();

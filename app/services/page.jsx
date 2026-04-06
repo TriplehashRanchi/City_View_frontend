@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   DataTable,
   Field,
@@ -25,12 +26,14 @@ const initialForm = {
 };
 
 export default function ServicesPage() {
+  const searchParams = useSearchParams();
   const [services, setServices] = useState([]);
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
 
   const loadServices = async () => {
     try {
@@ -47,6 +50,10 @@ export default function ServicesPage() {
   useEffect(() => {
     loadServices();
   }, []);
+
+  useEffect(() => {
+    setSearchTerm(searchParams.get("search") || "");
+  }, [searchParams]);
 
   const onChange = (key) => (event) => {
     setForm((current) => ({ ...current, [key]: event.target.value }));
@@ -74,6 +81,20 @@ export default function ServicesPage() {
     }
   };
 
+  const filteredServices = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return services;
+
+    return services.filter((item) => {
+      return (
+        item.name?.toLowerCase().includes(term) ||
+        item.pricing_type?.toLowerCase().includes(term) ||
+        item.description?.toLowerCase().includes(term) ||
+        item.status?.toLowerCase().includes(term)
+      );
+    });
+  }, [searchTerm, services]);
+
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       <PageIntro
@@ -81,6 +102,15 @@ export default function ServicesPage() {
         title="Service catalog"
         description="Manage operational services such as counters, staff, styling, or logistics that can be quoted directly or embedded in packages."
       />
+
+      <div className="max-w-sm">
+        <TextInput
+          value={searchTerm}
+          onChange={(event) => setSearchTerm(event.target.value)}
+          placeholder="Search services..."
+          className="bg-gray-50"
+        />
+      </div>
 
       <div className="grid gap-6 xl:grid-cols-[0.95fr_1.35fr]">
         <Panel title="New service" subtitle="Maps to `POST /catalog/services`.">
@@ -136,9 +166,9 @@ export default function ServicesPage() {
                 { key: "description", label: "Description" },
                 { key: "status", label: "Status" },
               ]}
-              rows={services}
+              rows={filteredServices}
               emptyTitle="No services yet"
-              emptyDescription="Add the first service to support package and quotation building."
+              emptyDescription="Add the first service or change the search to see results."
             />
           )}
         </Panel>

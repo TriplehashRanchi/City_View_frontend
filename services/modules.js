@@ -74,6 +74,18 @@ export const quotationsApi = {
   },
 };
 
+export const searchApi = {
+  async global(query, limit = 5) {
+    const { data } = await api.get("/search", {
+      params: {
+        q: query,
+        limit,
+      },
+    });
+    return data;
+  },
+};
+
 export const reportsApi = {
   async dashboard() {
     const { data } = await api.get("/reports/dashboard");

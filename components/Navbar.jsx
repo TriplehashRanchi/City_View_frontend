@@ -20,7 +20,7 @@ const labels = {
   quotations: "Quotation Desk",
 };
 
-export default function TopNavbar({ onMenuClick = () => {} }) {
+export default function TopNavbar({ onMenuClick = () => {}, onOpenSearch = () => {} }) {
   const pathname = usePathname();
   const router = useRouter();
   const segment = pathname.split("/")[1] || "dashboard";
@@ -68,11 +68,13 @@ export default function TopNavbar({ onMenuClick = () => {} }) {
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
               <Search size={16} className="text-gray-400 transition-colors group-focus-within:text-green-500" />
             </div>
-            <input
-              type="text"
-              placeholder="Search clients, events, quotations..."
-              className="w-full rounded-2xl border border-green-500 bg-white/50 py-2.5 pl-10 pr-4 text-sm text-gray-700 placeholder:text-gray-400 focus:border-green-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-green-500/20 transition-all"
-            />
+            <button
+              type="button"
+              onClick={onOpenSearch}
+              className="w-full rounded-2xl border border-green-500 bg-white/50 py-2.5 pl-10 pr-14 text-left text-sm text-gray-400 transition-all hover:border-green-400 hover:bg-white focus:border-green-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-green-500/20"
+            >
+              Search clients, events, quotations...
+            </button>
             <div className="absolute inset-y-0 right-3 flex items-center">
               <kbd className="hidden items-center gap-1 rounded border border-green-500 bg-white/50 px-1.5 font-sans text-[10px] font-medium text-gray-500 md:flex">
                 <Command size={10} />K
@@ -93,6 +95,13 @@ export default function TopNavbar({ onMenuClick = () => {} }) {
 
           {/* Action Icons */}
           <div className="flex items-center gap-1.5">
+            <button
+              onClick={onOpenSearch}
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-green-500 bg-white/50 text-gray-500 transition-all hover:border-green-400/50 hover:bg-green-50 hover:text-green-500 lg:hidden"
+              title="Search"
+            >
+              <Search size={18} />
+            </button>
             <button
               onClick={onLogout}
               className="flex h-10 w-10 items-center justify-center rounded-xl border border-green-500 bg-white/50 text-gray-500 transition-all hover:border-green-400/50 hover:bg-green-50 hover:text-green-500"

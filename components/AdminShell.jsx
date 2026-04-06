@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import TopNavbar from "@/components/Navbar";
+import CommandPalette from "@/components/CommandPalette";
 import { auth } from "@/services/auth";
 
 export default function AdminShell({ children }) {
@@ -11,6 +12,7 @@ export default function AdminShell({ children }) {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const isPublicRoute = pathname === "/" || pathname === "/login";
@@ -88,6 +90,27 @@ export default function AdminShell({ children }) {
     };
   }, [isPublicRoute, pathname, router]);
 
+  useEffect(() => {
+    if (isPublicRoute) return undefined;
+
+    const onKeyDown = (event) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setSearchOpen(true);
+      }
+
+      if (event.key === "Escape") {
+        setSearchOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [isPublicRoute]);
+
   if (checkingAuth) {
     return (
       <main className="grid min-h-screen place-items-center bg-[#FFF7CD] p-6">
@@ -118,9 +141,11 @@ export default function AdminShell({ children }) {
       />
 
       <div className={`transition-[padding] duration-300 ${sidebarCollapsed ? "md:pl-24" : "md:pl-72"}`}>
-        <TopNavbar onMenuClick={() => setMobileMenuOpen(true)} />
+        <TopNavbar onMenuClick={() => setMobileMenuOpen(true)} onOpenSearch={() => setSearchOpen(true)} />
         <main className="relative z-10 p-4 md:p-8">{children}</main>
       </div>
+
+      <CommandPalette open={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>
   );
 }
