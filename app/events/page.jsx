@@ -33,6 +33,49 @@ const initialForm = {
 
 const itemsPerPage = 8;
 
+function formatEventDate(value) {
+  if (!value) return "-";
+
+  const parsedDate = new Date(value);
+  if (!Number.isNaN(parsedDate.getTime())) {
+    return new Intl.DateTimeFormat("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }).format(parsedDate);
+  }
+
+  return value;
+}
+
+function formatEventTime(value) {
+  if (!value) return "";
+
+  const timeMatch = String(value).match(/^(\d{1,2}):(\d{2})/);
+  if (!timeMatch) return value;
+
+  const [, hours, minutes] = timeMatch;
+  const parsedDate = new Date();
+  parsedDate.setHours(Number(hours), Number(minutes), 0, 0);
+
+  return new Intl.DateTimeFormat("en-IN", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).format(parsedDate);
+}
+
+function formatEventSchedule(startTime, endTime) {
+  const formattedStart = formatEventTime(startTime);
+  const formattedEnd = formatEventTime(endTime);
+
+  if (formattedStart && formattedEnd) {
+    return `${formattedStart} to ${formattedEnd}`;
+  }
+
+  return formattedStart || formattedEnd || "Time not set";
+}
+
 export default function EventsPage() {
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -235,9 +278,9 @@ export default function EventsPage() {
                   label: "Schedule",
                   render: (row) => (
                     <div className="space-y-1">
-                      <p className="font-medium text-gray-700">{row.event_date || "-"}</p>
+                      <p className="font-medium text-gray-700">{formatEventDate(row.event_date)}</p>
                       <p className="text-xs text-gray-500">
-                        {row.start_time || "--:--"} {row.end_time ? `to ${row.end_time}` : ""}
+                        {formatEventSchedule(row.start_time, row.end_time)}
                       </p>
                     </div>
                   ),
