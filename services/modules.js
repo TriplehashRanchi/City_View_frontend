@@ -64,6 +64,10 @@ export const quotationsApi = {
     const { data } = await api.get(`/quotations/${id}`);
     return data;
   },
+  async getVersionById(versionId) {
+    const { data } = await api.get(`/quotations/versions/${versionId}`);
+    return data;
+  },
   async createVersion(quotationId, payload) {
     const { data } = await api.post(`/quotations/${quotationId}/versions`, payload);
     return data;

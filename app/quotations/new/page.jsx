@@ -36,6 +36,87 @@ const initialVersionForm = {
   customPrice: "",
 };
 
+const initialNewCustomerForm = {
+  clientName: "",
+  clientPhone: "",
+  clientEmail: "",
+  companyName: "",
+  clientNotes: "",
+  occasionType: "",
+  eventDate: "",
+  startTime: "",
+  endTime: "",
+  guestCount: "",
+  venue: "",
+  eventNotes: "",
+};
+
+const buildVersionFormFromDetail = (versionDetail) => {
+  const packageLine = versionDetail.lineItems?.find((item) => item.source_type === "package");
+  const serviceLine = versionDetail.lineItems?.find((item) => item.catalog_type === "service");
+  const customLine = versionDetail.lineItems?.find((item) => item.catalog_type === "custom");
+
+  return {
+    ...initialVersionForm,
+    quotationId: String(versionDetail.quotation_id),
+    validUntil: versionDetail.valid_until ? String(versionDetail.valid_until).slice(0, 10) : "",
+    termsAndConditions: versionDetail.terms_and_conditions || "",
+    customerNotes: versionDetail.customer_notes || "",
+    discountType: versionDetail.discount_type || "none",
+    discountValue: String(versionDetail.discount_value ?? 0),
+    manualAdjustment: String(versionDetail.manual_adjustment ?? 0),
+    packageId: packageLine?.catalog_id ? String(packageLine.catalog_id) : "",
+    packageGuestCount: packageLine?.guest_count ? String(packageLine.guest_count) : "",
+    packageQuantity: packageLine?.quantity ? String(packageLine.quantity) : "1",
+    extraServiceId: serviceLine?.catalog_id ? String(serviceLine.catalog_id) : "",
+    extraServicePrice: serviceLine?.unit_price ? String(serviceLine.unit_price) : "",
+    customName: customLine?.item_name || "",
+    customDescription: customLine?.item_description || "",
+    customPrice: customLine?.unit_price ? String(customLine.unit_price) : "",
+  };
+};
+
+const buildVersionPayload = (form, eventGuestCount) => ({
+  validUntil: form.validUntil || null,
+  termsAndConditions: form.termsAndConditions.trim() || null,
+  customerNotes: form.customerNotes.trim() || null,
+  discountType: form.discountType,
+  discountValue: Number(form.discountValue || 0),
+  manualAdjustment: Number(form.manualAdjustment || 0),
+  selectedPackages: form.packageId
+    ? [
+        {
+          packageId: Number(form.packageId),
+          quantity: Number(form.packageQuantity || 1),
+          guestCount: Number(form.packageGuestCount || eventGuestCount || 1),
+        },
+      ]
+    : [],
+  customItems: [
+    form.extraServiceId
+      ? {
+          catalogType: "service",
+          catalogId: Number(form.extraServiceId),
+          pricingType: "fixed",
+          quantity: 1,
+          unitPriceOverride: Number(form.extraServicePrice || 0),
+          descriptionOverride: "Extra service added from quotation desk",
+        }
+      : null,
+    form.customName
+      ? {
+          catalogType: "custom",
+          name: form.customName,
+          description: form.customDescription.trim() || null,
+          pricingType: "fixed",
+          quantity: 1,
+          unitPrice: Number(form.customPrice || 0),
+          unitLabel: "job",
+        }
+      : null,
+  ].filter(Boolean),
+});
+
 function SectionHeading({ number, title, subtitle }) {
   return (
     <div className="flex items-start gap-4 pb-2">
@@ -75,9 +156,12 @@ export default function NewQuotationPage() {
   const [events, setEvents] = useState([]);
   const [packages, setPackages] = useState([]);
   const [services, setServices] = useState([]);
+  const [workspaceMode, setWorkspaceMode] = useState(initialQuotationId ? "existing" : "create");
   const [selectedEventId, setSelectedEventId] = useState(initialEventId);
   const [quotations, setQuotations] = useState([]);
   const [selectedQuotation, setSelectedQuotation] = useState(null);
+  const [newCustomerForm, setNewCustomerForm] = useState(initialNewCustomerForm);
+  const [editingVersionMeta, setEditingVersionMeta] = useState(null);
   const [versionForm, setVersionForm] = useState(() => ({
     ...initialVersionForm,
     quotationId: initialQuotationId,
@@ -196,26 +280,84 @@ export default function NewQuotationPage() {
     setVersionForm((current) => ({ ...current, [key]: event.target.value }));
   };
 
-  const onInitQuotation = async () => {
-    if (!selectedEventId) return;
+  const onNewCustomerFieldChange = (key) => (event) => {
+    setNewCustomerForm((current) => ({ ...current, [key]: event.target.value }));
+  };
+
+  const onEditPreviousVersion = async (versionId) => {
+    try {
+      setBusy(true);
+      setError("");
+      const response = await quotationsApi.getVersionById(versionId);
+      const versionDetail = response.data;
+
+      setVersionForm(buildVersionFormFromDetail(versionDetail));
+      setEditingVersionMeta({
+        id: versionDetail.id,
+        versionNumber: versionDetail.version_number,
+      });
+
+      toast({
+        variant: "success",
+        title: "Version loaded for editing",
+        description: `Version ${versionDetail.version_number} is ready to edit and save as the next version.`,
+      });
+    } catch (err) {
+      const message = err?.response?.data?.message || "Unable to load the selected version.";
+      setError(message);
+      toast({
+        variant: "error",
+        title: "Version not loaded",
+        description: message,
+      });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onCreateNewQuotationFlow = async (event) => {
+    event.preventDefault();
 
     try {
       setBusy(true);
       setError("");
-      const response = await quotationsApi.init({ eventId: Number(selectedEventId) });
+
+      const createdEventResponse = await eventsApi.create({
+        occasionType: newCustomerForm.occasionType.trim(),
+        eventDate: newCustomerForm.eventDate,
+        startTime: newCustomerForm.startTime,
+        endTime: newCustomerForm.endTime || null,
+        guestCount: Number(newCustomerForm.guestCount),
+        venue: newCustomerForm.venue.trim(),
+        notes: newCustomerForm.eventNotes.trim() || null,
+        client: {
+          name: newCustomerForm.clientName.trim(),
+          phone: newCustomerForm.clientPhone.trim() || null,
+          email: newCustomerForm.clientEmail.trim() || null,
+          companyName: newCustomerForm.companyName.trim() || null,
+          notes: newCustomerForm.clientNotes.trim() || null,
+        },
+      });
+
+      const createdEvent = createdEventResponse.data;
+      const quotationResponse = await quotationsApi.init({ eventId: Number(createdEvent.id) });
+      const versionPayload = buildVersionPayload(versionForm, Number(newCustomerForm.guestCount));
+
+      await quotationsApi.createVersion(Number(quotationResponse.data.id), versionPayload);
+
       toast({
         variant: "success",
-        title: "Quotation initialized",
-        description: "The quotation is ready for version creation.",
+        title: "Quotation created successfully",
+        description: "Customer, booking, quotation, and first version were created together.",
       });
-      await loadQuotations(selectedEventId, response.data.id);
-      await hydrateQuotation(response.data.id);
+      router.push("/quotations?created=1");
     } catch (err) {
-      const message = err?.response?.data?.message || "Unable to initialize quotation.";
+      const message =
+        err?.response?.data?.message || "Unable to create the quotation in one flow.";
       setError(message);
       toast({
         variant: "error",
-        title: "Quotation not initialized",
+        title: "Quotation not created",
         description: message,
       });
     } finally {
@@ -230,49 +372,9 @@ export default function NewQuotationPage() {
     try {
       setBusy(true);
       setError("");
-
-      const payload = {
-        validUntil: versionForm.validUntil || null,
-        termsAndConditions: versionForm.termsAndConditions.trim() || null,
-        customerNotes: versionForm.customerNotes.trim() || null,
-        discountType: versionForm.discountType,
-        discountValue: Number(versionForm.discountValue || 0),
-        manualAdjustment: Number(versionForm.manualAdjustment || 0),
-        selectedPackages: versionForm.packageId
-          ? [
-              {
-                packageId: Number(versionForm.packageId),
-                quantity: Number(versionForm.packageQuantity || 1),
-                guestCount: Number(versionForm.packageGuestCount || selectedEvent?.guest_count || 1),
-              },
-            ]
-          : [],
-        customItems: [
-          versionForm.extraServiceId
-            ? {
-                catalogType: "service",
-                catalogId: Number(versionForm.extraServiceId),
-                pricingType: "fixed",
-                quantity: 1,
-                unitPriceOverride: Number(versionForm.extraServicePrice || 0),
-                descriptionOverride: "Extra service added from quotation desk",
-              }
-            : null,
-          versionForm.customName
-            ? {
-                catalogType: "custom",
-                name: versionForm.customName,
-                description: versionForm.customDescription.trim() || null,
-                pricingType: "fixed",
-                quantity: 1,
-                unitPrice: Number(versionForm.customPrice || 0),
-                unitLabel: "job",
-              }
-            : null,
-        ].filter(Boolean),
-      };
-
+      const payload = buildVersionPayload(versionForm, selectedEvent?.guest_count);
       await quotationsApi.createVersion(Number(versionForm.quotationId), payload);
+      setEditingVersionMeta(null);
       toast({
         variant: "success",
         title: "Quotation version saved",
@@ -326,16 +428,11 @@ export default function NewQuotationPage() {
       <PageIntro
         eyebrow="Quotations"
         title="Quotation workspace"
-        description="Create and manage quotation versions from a single, streamlined workspace."
+        description={workspaceMode === "create" ? "Create a fresh customer quotation in one clean flow." : "Review and revise one quotation without re-entering everything."}
         action={
-          <div className="flex items-center gap-3">
-            <SecondaryButton type="button" onClick={() => router.push("/quotations")}>
-              Back to list
-            </SecondaryButton>
-            <PrimaryButton type="button" onClick={onInitQuotation} disabled={!selectedEventId || busy || loading}>
-              {busy ? <LoadingInline label="Processing..." /> : "Initialize quotation"}
-            </PrimaryButton>
-          </div>
+          <SecondaryButton type="button" onClick={() => router.push("/quotations")}>
+            Back to list
+          </SecondaryButton>
         }
       />
 
@@ -343,86 +440,264 @@ export default function NewQuotationPage() {
         <LoadingState label="Loading workspace..." className="py-20" />
       ) : (
         <div className="space-y-6">
-          {/* Section 1: Event & Quotation Selection */}
-          <Panel>
-            <SectionHeading number="1" title="Select event & quotation" subtitle="Pick the event, then choose or initialize a quotation." />
+          {workspaceMode === "create" ? (
+            <Panel>
+              <SectionHeading
+                number="1"
+                title="Create new quotation"
+                subtitle="Add the customer and booking details once. The quotation workspace will open automatically after that."
+              />
 
-            <div className="mt-5 space-y-5">
-              <Field label="Event">
-                <Select
-                  value={selectedEventId}
-                  onChange={(event) => {
-                    setSelectedEventId(event.target.value);
-                    setSelectedQuotation(null);
-                    setVersionForm(() => ({ ...initialVersionForm, quotationId: "" }));
-                  }}
-                >
-                  <option value="">Select event</option>
-                  {events.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.client_name} — {item.occasion_type} — {item.event_date}
-                    </option>
-                  ))}
-                </Select>
-              </Field>
-
-              {selectedEvent && (
-                <div className="rounded-2xl border border-green-100 bg-gradient-to-r from-green-50/80 to-white p-5">
-                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-widest text-green-600">Client</p>
-                      <p className="mt-1 text-sm font-semibold text-gray-800">{selectedEvent.client_name}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-widest text-green-600">Occasion</p>
-                      <p className="mt-1 text-sm font-semibold text-gray-800">{selectedEvent.occasion_type}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-widest text-green-600">Date</p>
-                      <p className="mt-1 text-sm font-semibold text-gray-800">{selectedEvent.event_date}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-widest text-green-600">Venue</p>
-                      <p className="mt-1 text-sm font-semibold text-gray-800">{selectedEvent.venue || "Pending"}</p>
-                    </div>
+              <form className="mt-5 space-y-5" onSubmit={onCreateNewQuotationFlow}>
+                <div className="rounded-2xl border border-gray-100 bg-gray-50/50 p-5">
+                  <p className="mb-4 text-xs font-bold uppercase tracking-widest text-gray-500">Customer details</p>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field label="Customer name">
+                      <TextInput value={newCustomerForm.clientName} onChange={onNewCustomerFieldChange("clientName")} required />
+                    </Field>
+                    <Field label="Phone">
+                      <TextInput value={newCustomerForm.clientPhone} onChange={onNewCustomerFieldChange("clientPhone")} />
+                    </Field>
+                    <Field label="Email">
+                      <TextInput value={newCustomerForm.clientEmail} onChange={onNewCustomerFieldChange("clientEmail")} type="email" />
+                    </Field>
+                    <Field label="Company name">
+                      <TextInput value={newCustomerForm.companyName} onChange={onNewCustomerFieldChange("companyName")} />
+                    </Field>
+                  </div>
+                  <div className="mt-4">
+                    <Field label="Customer notes">
+                      <TextArea
+                        value={newCustomerForm.clientNotes}
+                        onChange={onNewCustomerFieldChange("clientNotes")}
+                        placeholder="Lead source, preferences, follow-up notes"
+                      />
+                    </Field>
                   </div>
                 </div>
-              )}
 
-              {quotations.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-sm font-semibold text-gray-700">Existing quotations</p>
-                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                    {quotations.map((item) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => hydrateQuotation(item.id)}
-                        className={`rounded-2xl border px-4 py-3 text-left transition-all duration-200 ${
-                          String(selectedQuotation?.id) === String(item.id)
-                            ? "border-green-300 bg-green-50 shadow-sm"
-                            : "border-gray-100 bg-white hover:border-green-200 hover:shadow-sm"
-                        }`}
-                      >
-                        <p className="text-sm font-bold text-gray-800">{item.quote_code}</p>
-                        <p className="mt-1 text-xs text-gray-500">
-                          v{item.current_version_number || "—"} · {item.current_status || "draft"}
-                        </p>
-                      </button>
-                    ))}
+                <div className="rounded-2xl border border-gray-100 bg-gray-50/50 p-5">
+                  <p className="mb-4 text-xs font-bold uppercase tracking-widest text-gray-500">Booking details</p>
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <Field label="Occasion">
+                      <TextInput value={newCustomerForm.occasionType} onChange={onNewCustomerFieldChange("occasionType")} required />
+                    </Field>
+                    <Field label="Event date">
+                      <TextInput value={newCustomerForm.eventDate} onChange={onNewCustomerFieldChange("eventDate")} type="date" required />
+                    </Field>
+                    <Field label="Start time">
+                      <TextInput value={newCustomerForm.startTime} onChange={onNewCustomerFieldChange("startTime")} type="time" required />
+                    </Field>
+                    <Field label="End time">
+                      <TextInput value={newCustomerForm.endTime} onChange={onNewCustomerFieldChange("endTime")} type="time" />
+                    </Field>
+                    <Field label="Guest count">
+                      <TextInput value={newCustomerForm.guestCount} onChange={onNewCustomerFieldChange("guestCount")} type="number" min="1" required />
+                    </Field>
+                    <Field label="Venue">
+                      <TextInput value={newCustomerForm.venue} onChange={onNewCustomerFieldChange("venue")} required />
+                    </Field>
+                  </div>
+                  <div className="mt-4">
+                    <Field label="Event notes">
+                      <TextArea
+                        value={newCustomerForm.eventNotes}
+                        onChange={onNewCustomerFieldChange("eventNotes")}
+                        placeholder="Special requirements, booking remarks, timeline context"
+                      />
+                    </Field>
                   </div>
                 </div>
-              )}
 
-              <MessageBanner tone="danger" message={error} />
-            </div>
-          </Panel>
+                <div className="rounded-2xl border border-gray-100 bg-gray-50/50 p-5">
+                  <p className="mb-4 text-xs font-bold uppercase tracking-widest text-gray-500">Pricing & Discount</p>
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <Field label="Valid until">
+                      <TextInput value={versionForm.validUntil} onChange={onVersionFieldChange("validUntil")} type="date" />
+                    </Field>
+                    <Field label="Discount type">
+                      <Select value={versionForm.discountType} onChange={onVersionFieldChange("discountType")}>
+                        <option value="none">None</option>
+                        <option value="flat">Flat</option>
+                        <option value="percentage">Percentage</option>
+                      </Select>
+                    </Field>
+                    <Field label="Discount value">
+                      <TextInput value={versionForm.discountValue} onChange={onVersionFieldChange("discountValue")} type="number" step="0.01" min="0" />
+                    </Field>
+                    <Field label="Manual adjustment">
+                      <TextInput value={versionForm.manualAdjustment} onChange={onVersionFieldChange("manualAdjustment")} type="number" step="0.01" />
+                    </Field>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-gray-100 bg-gray-50/50 p-5">
+                  <p className="mb-4 text-xs font-bold uppercase tracking-widest text-gray-500">Package</p>
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <Field label="Package">
+                      <Select value={versionForm.packageId} onChange={onVersionFieldChange("packageId")}>
+                        <option value="">No package</option>
+                        {packages.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Select>
+                    </Field>
+                    <Field label="Guest count">
+                      <TextInput
+                        value={versionForm.packageGuestCount}
+                        onChange={onVersionFieldChange("packageGuestCount")}
+                        type="number"
+                        min="1"
+                        placeholder="Event default"
+                      />
+                    </Field>
+                    <Field label="Quantity">
+                      <TextInput
+                        value={versionForm.packageQuantity}
+                        onChange={onVersionFieldChange("packageQuantity")}
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                      />
+                    </Field>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-gray-100 bg-gray-50/50 p-5">
+                  <p className="mb-4 text-xs font-bold uppercase tracking-widest text-gray-500">Extra Service</p>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field label="Service">
+                      <Select value={versionForm.extraServiceId} onChange={onVersionFieldChange("extraServiceId")}>
+                        <option value="">No extra service</option>
+                        {services.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Select>
+                    </Field>
+                    <Field label="Override price">
+                      <TextInput
+                        value={versionForm.extraServicePrice}
+                        onChange={onVersionFieldChange("extraServicePrice")}
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="4500"
+                      />
+                    </Field>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-gray-100 bg-gray-50/50 p-5">
+                  <p className="mb-4 text-xs font-bold uppercase tracking-widest text-gray-500">Custom Item</p>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field label="Name">
+                      <TextInput value={versionForm.customName} onChange={onVersionFieldChange("customName")} placeholder="Decoration" />
+                    </Field>
+                    <Field label="Price">
+                      <TextInput
+                        value={versionForm.customPrice}
+                        onChange={onVersionFieldChange("customPrice")}
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="12000"
+                      />
+                    </Field>
+                  </div>
+                  <div className="mt-4">
+                    <Field label="Description">
+                      <TextArea
+                        value={versionForm.customDescription}
+                        onChange={onVersionFieldChange("customDescription")}
+                        placeholder="Stage and floral decoration"
+                      />
+                    </Field>
+                  </div>
+                </div>
+
+                <div className="space-y-4 rounded-2xl border border-gray-100 bg-gray-50/50 p-5">
+                  <Field label="Terms and conditions">
+                    <TextArea
+                      value={versionForm.termsAndConditions}
+                      onChange={onVersionFieldChange("termsAndConditions")}
+                      placeholder="50% advance required before production begins."
+                    />
+                  </Field>
+                  <Field label="Customer notes for quotation">
+                    <TextArea
+                      value={versionForm.customerNotes}
+                      onChange={onVersionFieldChange("customerNotes")}
+                      placeholder="Best package for the selected venue and guest count."
+                    />
+                  </Field>
+                </div>
+
+                <div className="flex justify-end">
+                  <PrimaryButton type="submit" disabled={busy}>
+                    {busy ? <LoadingInline label="Creating..." /> : "Create full quotation"}
+                  </PrimaryButton>
+                </div>
+                <MessageBanner tone="danger" message={error} />
+              </form>
+            </Panel>
+          ) : (
+            <Panel>
+              <SectionHeading
+                number="1"
+                title="Quotation overview"
+                subtitle="This workspace is focused on one quotation. Edit from any previous version and save it as the next version."
+              />
+
+              <div className="mt-5 space-y-5">
+                {selectedEvent ? (
+                  <div className="rounded-2xl border border-green-100 bg-gradient-to-r from-green-50/80 to-white p-5">
+                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-widest text-green-600">Client</p>
+                        <p className="mt-1 text-sm font-semibold text-gray-800">{selectedEvent.client_name}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-widest text-green-600">Occasion</p>
+                        <p className="mt-1 text-sm font-semibold text-gray-800">{selectedEvent.occasion_type}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-widest text-green-600">Date</p>
+                        <p className="mt-1 text-sm font-semibold text-gray-800">{selectedEvent.event_date}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-widest text-green-600">Venue</p>
+                        <p className="mt-1 text-sm font-semibold text-gray-800">{selectedEvent.venue || "Pending"}</p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50/50 py-10 text-center">
+                    <p className="text-sm text-gray-500">Quotation details are not available yet.</p>
+                  </div>
+                )}
+
+                <MessageBanner tone="danger" message={error} />
+              </div>
+            </Panel>
+          )}
 
           {/* Section 2: Create Version Form */}
+          {workspaceMode === "existing" ? (
           <Panel>
             <SectionHeading number="2" title="Create version" subtitle="Fill in the details to generate a new quotation version." />
 
             <form className="mt-5 space-y-6" onSubmit={onCreateVersion}>
+              {editingVersionMeta ? (
+                <MessageBanner
+                  tone="success"
+                  message={`Editing from version ${editingVersionMeta.versionNumber}. Saving will create the next version for this quotation.`}
+                />
+              ) : null}
+
               <Field label="Selected quotation">
                 <Select value={versionForm.quotationId} onChange={onVersionFieldChange("quotationId")} required>
                   <option value="">Select quotation</option>
@@ -573,8 +848,10 @@ export default function NewQuotationPage() {
               </div>
             </form>
           </Panel>
+          ) : null}
 
           {/* Section 3: Quotation Details & Versions */}
+          {workspaceMode === "existing" ? (
           <Panel>
             <SectionHeading number="3" title="Quotation details" subtitle="Review saved versions and accept the final one." />
 
@@ -634,6 +911,14 @@ export default function NewQuotationPage() {
                             </div>
                             <SecondaryButton
                               type="button"
+                              onClick={() => onEditPreviousVersion(version.id)}
+                              disabled={busy}
+                              className="!px-4 !py-2 text-xs"
+                            >
+                              Edit as next version
+                            </SecondaryButton>
+                            <SecondaryButton
+                              type="button"
                               onClick={() => onAcceptVersion(version.id)}
                               disabled={busy || version.status === "accepted"}
                               className="!px-4 !py-2 text-xs"
@@ -658,6 +943,7 @@ export default function NewQuotationPage() {
               )}
             </div>
           </Panel>
+          ) : null}
         </div>
       )}
     </div>

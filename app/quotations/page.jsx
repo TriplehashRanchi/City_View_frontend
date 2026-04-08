@@ -46,7 +46,7 @@ function QuotationCard({ quotation, onOpen }) {
           <p className="mt-1.5 text-sm text-gray-500">{quotation.client_name || "Unknown client"}</p>
         </div>
         <SecondaryButton type="button" onClick={onOpen} className="shrink-0 !px-4 !py-2 text-xs">
-          Open
+          Edit
         </SecondaryButton>
       </div>
 
