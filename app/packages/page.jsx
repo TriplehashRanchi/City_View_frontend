@@ -2,9 +2,17 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil } from "lucide-react";
 import {
-  DataTable,
+  ChevronLeft,
+  ChevronRight,
+  Layers3,
+  Pencil,
+  Search,
+  Sparkles,
+  Tag,
+  Users,
+} from "lucide-react";
+import {
   LoadingState,
   MessageBanner,
   PageIntro,
@@ -13,14 +21,38 @@ import {
 } from "@/components/AdminUI";
 import { catalogApi } from "@/services/modules";
 
+function formatLabel(value) {
+  if (!value) return "Not set";
+  return String(value)
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function formatCurrency(value) {
+  const amount = Number(value || 0);
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+function getStatusClass(status) {
+  return status === "active"
+    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+    : "border-slate-200 bg-slate-100 text-slate-600";
+}
+
 export default function PackagesPage() {
   const router = useRouter();
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const itemsPerPage = 5;
   const [currentPage, setCurrentPage] = useState(1);
+
+  const itemsPerPage = 6;
 
   const loadData = async () => {
     try {
@@ -39,128 +71,227 @@ export default function PackagesPage() {
     loadData();
   }, []);
 
-  const filteredPackages = useMemo(() => {
-    const term = searchTerm.toLowerCase();
-    return packages.filter((pkg) =>
-      pkg.name?.toLowerCase().includes(term) ||
-      pkg.description?.toLowerCase().includes(term) ||
-      pkg.pricing_type?.toLowerCase().includes(term) ||
-      pkg.status?.toLowerCase().includes(term)
-    );
-  }, [packages, searchTerm]);
-
-  const dataToUse = searchTerm ? filteredPackages : packages;
-  const totalPages = Math.ceil(dataToUse.length / itemsPerPage);
-  const paginatedPackages = dataToUse.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
 
+  const filteredPackages = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return packages;
+
+    return packages.filter((pkg) => {
+      return (
+        pkg.name?.toLowerCase().includes(term) ||
+        pkg.description?.toLowerCase().includes(term) ||
+        pkg.pricing_type?.toLowerCase().includes(term) ||
+        pkg.status?.toLowerCase().includes(term) ||
+        String(pkg.base_price || "").includes(term) ||
+        String(pkg.minimum_guest_count || "").includes(term)
+      );
+    });
+  }, [packages, searchTerm]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredPackages.length / itemsPerPage));
+  const paginatedPackages = filteredPackages.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const stats = useMemo(() => {
+    const activePackages = packages.filter((pkg) => pkg.status === "active").length;
+    const perPersonPackages = packages.filter((pkg) => pkg.pricing_type === "per_person").length;
+    const averageBasePrice = packages.length
+      ? Math.round(
+          packages.reduce((sum, pkg) => sum + Number(pkg.base_price || 0), 0) / packages.length
+        )
+      : 0;
+    const averageGuestMinimum = packages.length
+      ? Math.round(
+          packages.reduce((sum, pkg) => sum + Number(pkg.minimum_guest_count || 0), 0) / packages.length
+        )
+      : 0;
+
+    return {
+      totalPackages: packages.length,
+      activePackages,
+      perPersonPackages,
+      averageBasePrice,
+      averageGuestMinimum,
+    };
+  }, [packages]);
+
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <div className="mx-auto max-w-7xl space-y-8">
       <PageIntro
         eyebrow="Packages"
         title="Package builder"
-        description="Review reusable packages and open the dedicated builder for new package creation."
+        description="Review reusable packages and jump into the dedicated package builder with a cleaner catalog view."
+        action={
+          <PrimaryButton onClick={() => router.push("/packages/new")} className="rounded-xl px-5 py-3 shadow-sm">
+            Add Package
+          </PrimaryButton>
+        }
       />
-
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center border border-green-200 rounded-full px-4 py-2 w-72 bg-gray-50">
-          <input
-            placeholder="Search packages..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="bg-transparent outline-none text-sm w-full"
-          />
-        </div>
-
-        <PrimaryButton onClick={() => router.push("/packages/new")}>
-          + Add Package
-        </PrimaryButton>
-      </div>
 
       <MessageBanner tone="danger" message={error} />
 
-      <Panel title="Packages">
-        {loading ? (
-          <LoadingState label="Loading..." />
-        ) : (
-          <>
-            <DataTable
-              columns={[
-                { key: "name", label: "Name" },
-                { key: "pricing_type", label: "Pricing" },
-                { key: "base_price", label: "Base price" },
-                { key: "minimum_guest_count", label: "Min guests" },
-                {
-                  key: "actions",
-                  label: "Actions",
-                  render: (pkg) => (
-                    <button
-                      type="button"
-                      onClick={() => router.push(`/packages/${pkg.id}/edit`)}
-                      className="inline-flex items-center justify-center rounded-full border border-green-300 p-2 text-green-700 transition hover:bg-green-50"
-                      aria-label={`Edit ${pkg.name || "package"}`}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </button>
-                  ),
-                },
-              ]}
-              rows={paginatedPackages}
-              emptyTitle="No packages yet"
-              emptyDescription="Create your first package"
-            />
+      <div className="grid gap-6">
+        <Panel
+          title="Packages"
+          subtitle="Search, review and edit your reusable package catalog from one clean workspace."
+          aside={
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-600">
+              {filteredPackages.length} result{filteredPackages.length === 1 ? "" : "s"}
+            </div>
+          }
+        >
+          <div className="space-y-6">
+            <div className="flex flex-col gap-4 border-b border-slate-100 pb-5 lg:flex-row lg:items-center lg:justify-between">
+              <div className="relative w-full max-w-md">
+                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search package, pricing, guest count or status"
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-11 py-3 text-sm text-slate-700 outline-none transition focus:border-green-400 focus:bg-white focus:ring-2 focus:ring-green-100"
+                />
+              </div>
+              <PrimaryButton onClick={() => router.push("/packages/new")} className="rounded-xl px-5 py-3 lg:hidden">
+                Add Package
+              </PrimaryButton>
+            </div>
 
-            {totalPages > 1 && (
-              <div className="mt-5 flex items-center justify-between">
-                <p className="text-sm text-gray-500">
-                  Showing {(currentPage - 1) * itemsPerPage + 1} –
-                  {Math.min(currentPage * itemsPerPage, dataToUse.length)} of {dataToUse.length}
-                </p>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setCurrentPage((page) => Math.max(page - 1, 1))}
-                    disabled={currentPage === 1}
-                    className="px-4 py-1.5 text-sm rounded-full border border-green-200 bg-white hover:bg-green-50 hover:border-green-400 text-green-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
-                  >
-                    ← Prev
-                  </button>
-
-                  <div className="flex items-center gap-1 bg-green-50 p-1 rounded-full">
-                    {Array.from({ length: totalPages }, (_, index) => (
-                      <button
-                        key={index}
-                        onClick={() => setCurrentPage(index + 1)}
-                        className={`px-3 py-1 text-sm rounded-full transition ${
-                          currentPage === index + 1
-                            ? "bg-green-600 text-white shadow-sm"
-                            : "text-green-700 hover:bg-white"
-                        }`}
-                      >
-                        {index + 1}
-                      </button>
-                    ))}
-                  </div>
-
-                  <button
-                    onClick={() => setCurrentPage((page) => Math.min(page + 1, totalPages))}
-                    disabled={currentPage === totalPages}
-                    className="px-4 py-1.5 text-sm rounded-full border border-green-200 bg-white hover:bg-green-50 hover:border-green-400 text-green-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
-                  >
-                    Next →
-                  </button>
+            {loading ? (
+              <LoadingState label="Loading packages..." />
+            ) : filteredPackages.length ? (
+              <div className="overflow-hidden rounded-xl border border-slate-200">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full border-collapse text-left">
+                    <thead className="bg-slate-50">
+                      <tr className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                        <th className="px-5 py-4 font-semibold">Package</th>
+                        <th className="px-5 py-4 font-semibold">Pricing</th>
+                        <th className="px-5 py-4 font-semibold">Guests</th>
+                        <th className="px-5 py-4 font-semibold">Status</th>
+                        <th className="px-5 py-4 text-right font-semibold">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white">
+                      {paginatedPackages.map((pkg) => (
+                        <tr key={pkg.id} className="border-t border-slate-100 align-top">
+                          <td className="px-5 py-4">
+                            <div className="space-y-1.5">
+                              <p className="text-base font-semibold text-slate-900">{pkg.name}</p>
+                              {/* <p className="text-sm text-slate-500">
+                                {pkg.description || "Reusable package setup for quotations and booking flow."}
+                              </p> */}
+                            </div>
+                          </td>
+                          <td className="px-5 py-4">
+                            <p className="text-sm font-semibold text-slate-900">
+                              {formatCurrency(pkg.base_price)}
+                            </p>
+                            {/* <p className="mt-1 text-sm text-slate-500">
+                              {formatLabel(pkg.pricing_type)}
+                            </p> */}
+                          </td>
+                          <td className="px-5 py-4">
+                            <p className="text-sm font-semibold text-slate-900">
+                              {Number(pkg.minimum_guest_count || 0)}
+                            </p>
+                            {/* <p className="mt-1 text-sm text-slate-500">Minimum guests</p> */}
+                          </td>
+                          <td className="px-5 py-4">
+                            <span
+                              className={`inline-flex rounded-xl border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] ${getStatusClass(pkg.status)}`}
+                            >
+                              {formatLabel(pkg.status)}
+                            </span>
+                          </td>
+                          <td className="px-5 py-4 text-right">
+                            <button
+                              type="button"
+                              onClick={() => router.push(`/packages/${pkg.id}/edit`)}
+                              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 transition hover:border-green-300 hover:bg-green-50 hover:text-green-800"
+                              aria-label={`Edit ${pkg.name || "package"}`}
+                            >
+                              <Pencil className="h-4 w-4" />
+                              Edit
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
+            ) : (
+              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 px-6 py-12 text-center">
+                <p className="font-semibold text-slate-900">No packages found</p>
+                <p className="mt-2 text-sm text-slate-500">
+                  Try a different search term or create a new package from the builder.
+                </p>
+              </div>
             )}
-          </>
-        )}
-      </Panel>
+
+            {filteredPackages.length > 0 && (
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <p className="text-sm text-slate-500">
+                  Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+                  {Math.min(currentPage * itemsPerPage, filteredPackages.length)} of {filteredPackages.length}
+                </p>
+
+                {totalPages > 1 && (
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setCurrentPage((page) => Math.max(page - 1, 1))}
+                      disabled={currentPage === 1}
+                      className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Prev
+                    </button>
+
+                    <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-1.5">
+                      {Array.from({ length: totalPages }, (_, index) => {
+                        const pageNumber = index + 1;
+                        const active = pageNumber === currentPage;
+
+                        return (
+                          <button
+                            key={pageNumber}
+                            type="button"
+                            onClick={() => setCurrentPage(pageNumber)}
+                            className={`min-w-10 rounded-xl px-3 py-2 text-sm font-semibold transition ${
+                              active
+                                ? "bg-slate-900 text-white shadow-sm"
+                                : "text-slate-600 hover:bg-white"
+                            }`}
+                          >
+                            {pageNumber}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setCurrentPage((page) => Math.min(page + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                      className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </Panel>
+      </div>
     </div>
   );
 }
