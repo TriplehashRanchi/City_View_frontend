@@ -22,6 +22,10 @@ export const catalogApi = {
     const { data } = await api.post("/catalog/products", payload);
     return data;
   },
+  async updateProduct(productId, payload) {
+    const { data } = await api.patch(`/catalog/products/${productId}`, payload);
+    return data;
+  },
   async listServices(params = {}) {
     const { data } = await api.get("/catalog/services", { params });
     return data;
@@ -34,8 +38,16 @@ export const catalogApi = {
     const { data } = await api.get("/catalog/packages", { params });
     return data;
   },
+  async getPackage(packageId) {
+    const { data } = await api.get(`/catalog/packages/${packageId}`);
+    return data;
+  },
   async createPackage(payload) {
     const { data } = await api.post("/catalog/packages", payload);
+    return data;
+  },
+  async updatePackage(packageId, payload) {
+    const { data } = await api.patch(`/catalog/packages/${packageId}`, payload);
     return data;
   },
 };

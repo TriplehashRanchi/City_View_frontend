@@ -19,7 +19,7 @@ export function PageIntro({ eyebrow, title, description, action }) {
 
 export function Panel({ title, subtitle, children, aside }) {
   return (
-    <section className="rounded-[2rem] border border-gray-100 bg-white p-6 shadow-md">
+    <section className="rounded-xl border border-gray-100 bg-white p-6 ">
       {(title || subtitle || aside) && (
         <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
