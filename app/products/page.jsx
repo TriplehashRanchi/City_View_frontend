@@ -470,7 +470,7 @@ export default function ProductsPage() {
       <PageIntro
         eyebrow="Catalog"
         title="Product catalog"
-        description="A cleaner catalog view for pricing, package building, and faster product updates."
+
         action={
           <PrimaryButton onClick={openCreateForm} className="rounded-xl px-5 py-3 shadow-sm">
             Add Product
@@ -480,13 +480,6 @@ export default function ProductsPage() {
 
       <div className="grid gap-6 ">
         <Panel
-          title="Products"
-          subtitle="Search, review and update the catalog without leaving the page."
-          aside={
-            <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-600">
-              {filteredProducts.length} result{filteredProducts.length === 1 ? "" : "s"}
-            </div>
-          }
         >
           <div className="space-y-6">
             <div className="flex flex-col gap-4 border-b border-slate-100 pb-5 lg:flex-row lg:items-center lg:justify-between">
@@ -515,8 +508,8 @@ export default function ProductsPage() {
                       <tr className="text-xs uppercase tracking-[0.2em] text-slate-500">
                         <th className="px-5 py-4 font-semibold">Product</th>
                         <th className="px-5 py-4 font-semibold">Type</th>
-                        <th className="px-5 py-4 font-semibold">Pricing</th>
                         <th className="px-5 py-4 font-semibold">Category</th>
+                        <th className="px-5 py-4 font-semibold">Pricing</th>
                         <th className="px-5 py-4 text-right font-semibold">Action</th>
                       </tr>
                     </thead>
@@ -542,6 +535,13 @@ export default function ProductsPage() {
                             </div>
                           </td>
                           <td className="px-5 py-4">
+                            <span
+                              className={`inline-flex rounded-xl border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] ${getStatusClass(product.status)}`}
+                            >
+                              {formatLabel(product.category)}
+                            </span>
+                          </td>
+                          <td className="px-5 py-4">
                             <p className="text-sm font-semibold text-slate-900">
                               {formatCurrency(product.unit_price)}
                             </p>
@@ -549,13 +549,7 @@ export default function ProductsPage() {
                               {formatLabel(product.pricing_type)}
                             </p> */}
                           </td>
-                          <td className="px-5 py-4">
-                            <span
-                              className={`inline-flex rounded-xl border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] ${getStatusClass(product.status)}`}
-                            >
-                              {formatLabel(product.category)}
-                            </span>
-                          </td>
+                          
                           <td className="px-5 py-4 text-right">
                             <button
                               type="button"

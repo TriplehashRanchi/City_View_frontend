@@ -3,163 +3,74 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
+  ArrowLeft,
+  CalendarDays,
+  Check,
+  Edit3,
+  FileText,
+  Gift,
+  IndianRupee,
+  Layers,
+  MapPin,
+  Package,
+  Pencil,
+  Plus,
+  Send,
+  Shield,
+  StickyNote,
+  User,
+} from "lucide-react";
+import {
   Field,
   LoadingInline,
   LoadingState,
   MessageBanner,
-  PageIntro,
-  Panel,
   PrimaryButton,
-  SecondaryButton,
   Select,
-  TextArea,
-  TextInput,
 } from "@/components/AdminUI";
+import {
+  BookingDetailsSection,
+  CustomerDetailsSection,
+  CustomItemSection,
+  PackagesSection,
+  PricingDiscountSection,
+  PricingSummaryCard,
+  SectionHeading,
+  TermsNotesSection,
+} from "@/components/quotations/QuotationSections";
 import { useToast } from "@/components/ToastProvider";
+import {
+  buildVersionFormFromDetail,
+  buildVersionPayload,
+  formatDisplayDate,
+  formatMoney,
+  initialNewCustomerForm,
+  initialVersionForm,
+  resolveLineTotal,
+  resolvePackageProducts,
+  roundMoney,
+  computeDiscountAmount,
+} from "@/components/quotations/quotationUtils";
 import { catalogApi, eventsApi, quotationsApi } from "@/services/modules";
 
-const emptyPackageSelection = {
-  packageId: "",
-  packageGuestCount: "",
-  packageQuantity: "1",
-};
-
-const initialVersionForm = {
-  quotationId: "",
-  validUntil: "",
-  termsAndConditions: "",
-  customerNotes: "",
-  discountType: "none",
-  discountValue: "0",
-  manualAdjustment: "0",
-  packageSelections: [emptyPackageSelection],
-  customName: "",
-  customDescription: "",
-  customPrice: "",
-};
-
-const initialNewCustomerForm = {
-  clientName: "",
-  clientPhone: "",
-  clientEmail: "",
-  companyName: "",
-  clientNotes: "",
-  occasionType: "",
-  eventDate: "",
-  startTime: "",
-  endTime: "",
-  guestCount: "",
-  venue: "",
-  eventNotes: "",
-};
-
-const buildVersionFormFromDetail = (versionDetail) => {
-  const packageLines = versionDetail.lineItems?.filter((item) => item.source_type === "package") || [];
-  const customLine = versionDetail.lineItems?.find((item) => item.catalog_type === "custom");
-
-  return {
-    ...initialVersionForm,
-    quotationId: String(versionDetail.quotation_id),
-    validUntil: versionDetail.valid_until ? String(versionDetail.valid_until).slice(0, 10) : "",
-    termsAndConditions: versionDetail.terms_and_conditions || "",
-    customerNotes: versionDetail.customer_notes || "",
-    discountType: versionDetail.discount_type || "none",
-    discountValue: String(versionDetail.discount_value ?? 0),
-    manualAdjustment: String(versionDetail.manual_adjustment ?? 0),
-    packageSelections: packageLines.length
-      ? packageLines.map((item) => ({
-          packageId: item.catalog_id ? String(item.catalog_id) : "",
-          packageGuestCount: item.guest_count ? String(item.guest_count) : "",
-          packageQuantity: item.quantity ? String(item.quantity) : "1",
-        }))
-      : [emptyPackageSelection],
-    customName: customLine?.item_name || "",
-    customDescription: customLine?.item_description || "",
-    customPrice: customLine?.unit_price ? String(customLine.unit_price) : "",
-  };
-};
-
-const buildVersionPayload = (form, eventGuestCount) => ({
-  validUntil: form.validUntil || null,
-  termsAndConditions: form.termsAndConditions.trim() || null,
-  customerNotes: form.customerNotes.trim() || null,
-  discountType: form.discountType,
-  discountValue: Number(form.discountValue || 0),
-  manualAdjustment: Number(form.manualAdjustment || 0),
-  selectedPackages: (form.packageSelections || [])
-    .filter((item) => item.packageId)
-    .map((item) => ({
-      packageId: Number(item.packageId),
-      quantity: Number(item.packageQuantity || 1),
-      guestCount: Number(item.packageGuestCount || eventGuestCount || 1),
-    })),
-  customItems: [
-    form.customName.trim() || form.customDescription.trim() || form.customPrice
-      ? {
-          catalogType: "custom",
-          name: form.customName.trim() || "Custom item",
-          description: form.customDescription.trim() || null,
-          pricingType: "fixed",
-          quantity: 1,
-          unitPrice: Number(form.customPrice || 0),
-          unitLabel: "job",
-        }
-      : null,
-  ].filter(Boolean),
-});
-
-const roundMoney = (value) => Math.round((Number(value) + Number.EPSILON) * 100) / 100;
-
-const resolveLineTotal = ({ pricingType, unitPrice, quantity = 1, guestCount = 0 }) => {
-  const safeUnitPrice = Number(unitPrice || 0);
-  const safeQuantity = Math.max(Number(quantity || 0), 0);
-  const safeGuestCount = Math.max(Number(guestCount || 0), 0);
-
-  if (pricingType === "per_person") {
-    return roundMoney(safeUnitPrice * safeGuestCount * Math.max(safeQuantity, 1));
-  }
-  if (pricingType === "per_unit") {
-    return roundMoney(safeUnitPrice * safeQuantity);
-  }
-  return roundMoney(safeUnitPrice * Math.max(safeQuantity, 1));
-};
-
-const computeDiscountAmount = ({ subtotalAmount, discountType, discountValue }) => {
-  const subtotal = Number(subtotalAmount || 0);
-  const value = Number(discountValue || 0);
-
-  if (discountType === "none" || !value) return 0;
-  if (discountType === "flat") return roundMoney(Math.min(value, subtotal));
-  if (discountType === "percentage") return roundMoney(Math.min((subtotal * value) / 100, subtotal));
-  return 0;
-};
-
-const formatMoney = (value) => `Rs. ${Number(value || 0).toFixed(2)}`;
-
-function SectionHeading({ number, title, subtitle }) {
-  return (
-    <div className="flex items-start gap-4 pb-2">
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-100 text-sm font-bold text-green-700">
-        {number}
-      </span>
-      <div>
-        <h3 className="text-base font-bold text-gray-800">{title}</h3>
-        {subtitle && <p className="mt-0.5 text-sm text-gray-500">{subtitle}</p>}
-      </div>
-    </div>
-  );
-}
-
+/* ─── Status Badge ─── */
 function VersionStatusBadge({ status }) {
-  const colors = {
-    draft: "bg-amber-50 text-amber-700 border-amber-200",
-    sent: "bg-blue-50 text-blue-700 border-blue-200",
-    accepted: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    rejected: "bg-rose-50 text-rose-700 border-rose-200",
+  const styles = {
+    draft: "border-amber-200/60 bg-gradient-to-br from-amber-50 to-amber-100/40 text-amber-700",
+    sent: "border-blue-200/60 bg-gradient-to-br from-blue-50 to-blue-100/40 text-blue-700",
+    accepted: "border-emerald-200/60 bg-gradient-to-br from-emerald-50 to-emerald-100/40 text-emerald-700",
+    rejected: "border-rose-200/60 bg-gradient-to-br from-rose-50 to-rose-100/40 text-rose-700",
+  };
+  const dots = {
+    draft: "bg-amber-400",
+    sent: "bg-blue-400",
+    accepted: "bg-emerald-400",
+    rejected: "bg-rose-400",
   };
   const key = (status || "draft").toLowerCase();
   return (
-    <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold capitalize ${colors[key] || colors.draft}`}>
+    <span className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider ${styles[key] || styles.draft}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${dots[key] || dots.draft}`} />
       {key}
     </span>
   );
@@ -172,6 +83,7 @@ export default function NewQuotationPage() {
   const initialEventId = searchParams.get("eventId") || "";
   const initialQuotationId = searchParams.get("quotationId") || "";
   const isReadOnly = searchParams.get("mode") === "view";
+  const shouldPrefillLatestVersion = searchParams.get("prefill") === "latest";
 
   const [events, setEvents] = useState([]);
   const [packages, setPackages] = useState([]);
@@ -188,11 +100,31 @@ export default function NewQuotationPage() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [hasPrefilledLatestVersion, setHasPrefilledLatestVersion] = useState(!shouldPrefillLatestVersion);
+  const [activeVersionDetail, setActiveVersionDetail] = useState(null);
 
   const selectedEvent = useMemo(
     () => events.find((item) => String(item.id) === String(selectedEventId)),
     [events, selectedEventId]
   );
+
+  const getPackagePerPlatePrice = useCallback((pkg, selection = {}) => {
+    const includedProducts = resolvePackageProducts(pkg, selection);
+
+    return roundMoney(
+      includedProducts.reduce((sum, item) => {
+        return (
+          sum +
+          resolveLineTotal({
+            pricingType: item.pricing_type,
+            unitPrice: item.unit_price,
+            quantity: item.quantity || 1,
+            guestCount: 1,
+          })
+        );
+      }, 0)
+    );
+  }, []);
 
   const quotationTotals = useMemo(() => {
     const defaultGuestCount = Number(
@@ -203,14 +135,15 @@ export default function NewQuotationPage() {
       const pkg = packages.find((item) => String(item.id) === String(selection.packageId));
       if (!pkg) return sum;
 
+      const perPlatePrice = getPackagePerPlatePrice(pkg, selection);
+
       return (
         sum +
-        resolveLineTotal({
-          pricingType: pkg.pricing_type,
-          unitPrice: pkg.base_price,
-          quantity: selection.packageQuantity || 1,
-          guestCount: selection.packageGuestCount || defaultGuestCount,
-        })
+        roundMoney(
+          perPlatePrice *
+            Math.max(Number(selection.packageGuestCount || defaultGuestCount || 1), 1) *
+            Math.max(Number(selection.packageQuantity || 1), 1)
+        )
       );
     }, 0);
 
@@ -239,7 +172,7 @@ export default function NewQuotationPage() {
       manualAdjustment,
       finalAmount,
     };
-  }, [newCustomerForm.guestCount, packages, selectedEvent?.guest_count, versionForm]);
+  }, [getPackagePerPlatePrice, newCustomerForm.guestCount, packages, selectedEvent?.guest_count, versionForm]);
 
   const hydrateQuotation = useCallback(
     async (quotationId) => {
@@ -268,8 +201,19 @@ export default function NewQuotationPage() {
         eventsApi.list({ limit: 100 }),
         catalogApi.listPackages({ status: "active", limit: 100 }),
       ]);
+      const packageRows = packagesResponse.data || [];
+      const packageDetails = await Promise.all(
+        packageRows.map(async (item) => {
+          try {
+            const detail = await catalogApi.getPackage(item.id);
+            return detail.data || item;
+          } catch {
+            return item;
+          }
+        })
+      );
       setEvents(eventsResponse.data || []);
-      setPackages(packagesResponse.data || []);
+      setPackages(packageDetails);
     } catch (err) {
       const message = err?.response?.data?.message || "Unable to load quotation dependencies.";
       setError(message);
@@ -326,6 +270,10 @@ export default function NewQuotationPage() {
   }, [initialQuotationId, loadQuotations, selectedEventId]);
 
   useEffect(() => {
+    setHasPrefilledLatestVersion(!shouldPrefillLatestVersion);
+  }, [initialQuotationId, shouldPrefillLatestVersion]);
+
+  useEffect(() => {
     if (!versionForm.quotationId) {
       if (!initialQuotationId) {
         setSelectedQuotation(null);
@@ -340,6 +288,10 @@ export default function NewQuotationPage() {
     hydrateQuotation(versionForm.quotationId);
   }, [hydrateQuotation, initialQuotationId, selectedQuotation?.id, versionForm.quotationId]);
 
+  useEffect(() => {
+    setActiveVersionDetail(null);
+  }, [initialQuotationId]);
+
   const onVersionFieldChange = (key) => (event) => {
     setVersionForm((current) => ({ ...current, [key]: event.target.value }));
   };
@@ -349,8 +301,37 @@ export default function NewQuotationPage() {
     setVersionForm((current) => ({
       ...current,
       packageSelections: (current.packageSelections || []).map((item, itemIndex) =>
-        itemIndex === index ? { ...item, [key]: value } : item
+        itemIndex === index
+          ? {
+              ...item,
+              [key]: value,
+              ...(key === "packageId" ? { excludedProductIds: [] } : {}),
+            }
+          : item
       ),
+    }));
+  };
+
+  const togglePackageProduct = (index, productId) => {
+    setVersionForm((current) => ({
+      ...current,
+      packageSelections: (current.packageSelections || []).map((item, itemIndex) => {
+        if (itemIndex !== index) return item;
+
+        const existing = new Set((item.excludedProductIds || []).map((id) => String(id)));
+        const nextId = String(productId);
+
+        if (existing.has(nextId)) {
+          existing.delete(nextId);
+        } else {
+          existing.add(nextId);
+        }
+
+        return {
+          ...item,
+          excludedProductIds: Array.from(existing),
+        };
+      }),
     }));
   };
 
@@ -375,36 +356,78 @@ export default function NewQuotationPage() {
     setNewCustomerForm((current) => ({ ...current, [key]: event.target.value }));
   };
 
-  const onEditPreviousVersion = async (versionId) => {
-    try {
-      setBusy(true);
-      setError("");
-      const response = await quotationsApi.getVersionById(versionId);
-      const versionDetail = response.data;
+  const loadVersionDetail = useCallback(
+    async (versionId, options = {}) => {
+      const { silent = false, fillForm = false } = options;
 
-      setVersionForm(buildVersionFormFromDetail(versionDetail));
-      setEditingVersionMeta({
-        id: versionDetail.id,
-        versionNumber: versionDetail.version_number,
-      });
+      try {
+        setBusy(true);
+        setError("");
+        const response = await quotationsApi.getVersionById(versionId);
+        const versionDetail = response.data;
+        setActiveVersionDetail(versionDetail);
 
-      toast({
-        variant: "success",
-        title: "Version loaded for editing",
-        description: `Version ${versionDetail.version_number} is ready to edit and save as the next version.`,
-      });
-    } catch (err) {
-      const message = err?.response?.data?.message || "Unable to load the selected version.";
-      setError(message);
-      toast({
-        variant: "error",
-        title: "Version not loaded",
-        description: message,
-      });
-    } finally {
-      setBusy(false);
+        if (fillForm) {
+          setVersionForm(buildVersionFormFromDetail(versionDetail));
+          setEditingVersionMeta({
+            id: versionDetail.id,
+            versionNumber: versionDetail.version_number,
+          });
+        }
+
+        if (!silent) {
+          toast({
+            variant: "success",
+            title: fillForm ? "Version loaded for editing" : "Quotation loaded",
+            description: fillForm
+              ? `Version ${versionDetail.version_number} is ready to edit and save as the next version.`
+              : `Version ${versionDetail.version_number} is ready to review.`,
+          });
+        }
+      } catch (err) {
+        const message = err?.response?.data?.message || "Unable to load the selected version.";
+        setError(message);
+        toast({
+          variant: "error",
+          title: "Version not loaded",
+          description: message,
+        });
+      } finally {
+        setBusy(false);
+      }
+    },
+    [toast]
+  );
+
+  const onEditPreviousVersion = useCallback(
+    async (versionId, options = {}) => loadVersionDetail(versionId, { ...options, fillForm: true }),
+    [loadVersionDetail]
+  );
+
+  useEffect(() => {
+    if (workspaceMode !== "existing" || isReadOnly || hasPrefilledLatestVersion) return;
+    if (!selectedQuotation?.id) return;
+
+    const latestVersionId = selectedQuotation.latest_version_id || selectedQuotation?.versions?.[0]?.id;
+
+    if (!latestVersionId) {
+      setHasPrefilledLatestVersion(true);
+      return;
     }
-  };
+
+    setHasPrefilledLatestVersion(true);
+    onEditPreviousVersion(latestVersionId, { silent: true });
+  }, [hasPrefilledLatestVersion, isReadOnly, onEditPreviousVersion, selectedQuotation, workspaceMode]);
+
+  useEffect(() => {
+    if (workspaceMode !== "existing" || !isReadOnly) return;
+    if (!selectedQuotation?.id || activeVersionDetail?.quotation_id === selectedQuotation.id) return;
+
+    const latestVersionId = selectedQuotation.latest_version_id || selectedQuotation?.versions?.[0]?.id;
+    if (!latestVersionId) return;
+
+    loadVersionDetail(latestVersionId, { silent: true, fillForm: false });
+  }, [activeVersionDetail?.quotation_id, isReadOnly, loadVersionDetail, selectedQuotation, workspaceMode]);
 
   const onCreateNewQuotationFlow = async (event) => {
     event.preventDefault();
@@ -464,12 +487,19 @@ export default function NewQuotationPage() {
       setBusy(true);
       setError("");
       const payload = buildVersionPayload(versionForm, selectedEvent?.guest_count);
-      await quotationsApi.createVersion(Number(versionForm.quotationId), payload);
-      setEditingVersionMeta(null);
+      const response = await quotationsApi.createVersion(Number(versionForm.quotationId), payload);
+      const savedVersionNumber = response?.data?.version_number;
+
+      setEditingVersionMeta(savedVersionNumber ? {
+        id: response.data.id,
+        versionNumber: savedVersionNumber,
+      } : null);
       toast({
         variant: "success",
-        title: "Quotation version saved",
-        description: "The new version has been created successfully.",
+        title: savedVersionNumber ? `Quotation saved as v${savedVersionNumber}` : "Quotation version saved",
+        description: savedVersionNumber
+          ? `The quotation was saved successfully as version ${savedVersionNumber}.`
+          : "The new version has been created successfully.",
       });
       router.push("/quotations?created=1");
     } catch (err) {
@@ -515,568 +545,403 @@ export default function NewQuotationPage() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 pb-10">
-      <PageIntro
-        eyebrow="Quotations"
-        title={isReadOnly ? "Quotation details" : "Quotation workspace"}
-        description={
-          workspaceMode === "create"
-            ? "Create a fresh customer quotation in one clean flow."
-            : isReadOnly
-              ? "Review the saved quotation, its totals, and version history in read-only mode."
-              : "Review and revise one quotation without re-entering everything."
-        }
-        action={
-          <SecondaryButton type="button" onClick={() => router.push("/quotations")}>
-            Back to list
-          </SecondaryButton>
-        }
-      />
+    <div className="mx-auto max-w-5xl space-y-8 pb-12">
+      {/* ─── Header ─── */}
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+        <div className="space-y-3">
+          <button
+            type="button"
+            onClick={() => router.push("/quotations")}
+            className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-gray-500 transition-all duration-200 hover:bg-white hover:text-gray-700 hover:shadow-sm -ml-3"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to quotations
+          </button>
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-green-100 to-emerald-200 shadow-sm">
+              <FileText className="h-5 w-5 text-green-700" />
+            </div>
+            <div>
+              <h1 className="font-[var(--font-fraunces)] text-2xl font-semibold text-gray-800 md:text-3xl">
+                {isReadOnly ? "Quotation Details" : workspaceMode === "create" ? "New Quotation" : "Edit Quotation"}
+              </h1>
+              <p className="mt-0.5 text-sm text-gray-400">
+                {workspaceMode === "create"
+                  ? "Create a fresh customer quotation in one clean flow."
+                  : isReadOnly
+                    ? "Review quotation details, totals, and version history."
+                    : "Update the form and save to create the next version."}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          {isReadOnly && initialQuotationId ? (
+            <PrimaryButton
+              type="button"
+              onClick={() =>
+                router.push(`/quotations/new?eventId=${selectedEventId}&quotationId=${initialQuotationId}&prefill=latest`)
+              }
+              className="rounded-xl !px-5 !py-3"
+            >
+              <span className="inline-flex items-center gap-2">
+                <Pencil className="h-4 w-4" />
+                Edit Quotation
+              </span>
+            </PrimaryButton>
+          ) : null}
+        </div>
+      </div>
 
       {loading ? (
-        <LoadingState label="Loading workspace..." className="py-20" />
+        <LoadingState label="Loading workspace..." className="py-24" />
       ) : (
         <div className="space-y-6">
+          {/* ═══════════════════════════════════════════════════════
+              CREATE MODE — Full new quotation flow
+          ═══════════════════════════════════════════════════════ */}
           {workspaceMode === "create" ? (
-            <Panel>
-              <SectionHeading
-                number="1"
-                title="Create new quotation"
-                subtitle="Add the customer and booking details once. The quotation workspace will open automatically after that."
-              />
-
-              <form className="mt-5 space-y-5" onSubmit={onCreateNewQuotationFlow}>
-                <div className="rounded-2xl border border-gray-100 bg-gray-50/50 p-5">
-                  <p className="mb-4 text-xs font-bold uppercase tracking-widest text-gray-500">Customer details</p>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <Field label="Customer name">
-                      <TextInput value={newCustomerForm.clientName} onChange={onNewCustomerFieldChange("clientName")} required />
-                    </Field>
-                    <Field label="Phone">
-                      <TextInput value={newCustomerForm.clientPhone} onChange={onNewCustomerFieldChange("clientPhone")} />
-                    </Field>
-                    <Field label="Email (optional)">
-                      <TextInput value={newCustomerForm.clientEmail} onChange={onNewCustomerFieldChange("clientEmail")} type="email" />
-                    </Field>
-                    <Field label="Company name (optional)">
-                      <TextInput value={newCustomerForm.companyName} onChange={onNewCustomerFieldChange("companyName")} />
-                    </Field>
-                  </div>
-                  <div className="mt-4">
-                    <Field label="Customer notes (optional)">
-                      <TextArea
-                        value={newCustomerForm.clientNotes}
-                        onChange={onNewCustomerFieldChange("clientNotes")}
-                        placeholder="Lead source, preferences, follow-up notes"
-                      />
-                    </Field>
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-gray-100 bg-gray-50/50 p-5">
-                  <p className="mb-4 text-xs font-bold uppercase tracking-widest text-gray-500">Booking details</p>
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <Field label="Occasion">
-                      <TextInput value={newCustomerForm.occasionType} onChange={onNewCustomerFieldChange("occasionType")} required />
-                    </Field>
-                    <Field label="Event date">
-                      <TextInput value={newCustomerForm.eventDate} onChange={onNewCustomerFieldChange("eventDate")} type="date" required />
-                    </Field>
-                    <Field label="Start time">
-                      <TextInput value={newCustomerForm.startTime} onChange={onNewCustomerFieldChange("startTime")} type="time" required />
-                    </Field>
-                    <Field label="End time">
-                      <TextInput value={newCustomerForm.endTime} onChange={onNewCustomerFieldChange("endTime")} type="time" />
-                    </Field>
-                    <Field label="Guest count">
-                      <TextInput value={newCustomerForm.guestCount} onChange={onNewCustomerFieldChange("guestCount")} type="number" min="1" required />
-                    </Field>
-                    <Field label="Venue (optional)">
-                      <TextInput value={newCustomerForm.venue} onChange={onNewCustomerFieldChange("venue")} />
-                    </Field>
-                  </div>
-                  <div className="mt-4">
-                    <Field label="Event notes (optional)">
-                      <TextArea
-                        value={newCustomerForm.eventNotes}
-                        onChange={onNewCustomerFieldChange("eventNotes")}
-                        placeholder="Special requirements, booking remarks, timeline context"
-                      />
-                    </Field>
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-gray-100 bg-gray-50/50 p-5">
-                  <p className="mb-4 text-xs font-bold uppercase tracking-widest text-gray-500">Pricing & Discount</p>
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <Field label="Valid until">
-                      <TextInput value={versionForm.validUntil} onChange={onVersionFieldChange("validUntil")} type="date" />
-                    </Field>
-                    <Field label="Discount type">
-                      <Select value={versionForm.discountType} onChange={onVersionFieldChange("discountType")}>
-                        <option value="none">None</option>
-                        <option value="flat">Flat</option>
-                        <option value="percentage">Percentage</option>
-                      </Select>
-                    </Field>
-                    <Field label="Discount value">
-                      <TextInput value={versionForm.discountValue} onChange={onVersionFieldChange("discountValue")} type="number" step="0.01" min="0" />
-                    </Field>
-                    <Field label="Manual adjustment">
-                      <TextInput value={versionForm.manualAdjustment} onChange={onVersionFieldChange("manualAdjustment")} type="number" step="0.01" />
-                    </Field>
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-gray-100 bg-gray-50/50 p-5">
-                  <div className="mb-4 flex items-center justify-between gap-3">
-                    <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Packages</p>
-                    <SecondaryButton type="button" onClick={addPackageSelection} className="!px-4 !py-2 text-xs">
-                      + Add package
-                    </SecondaryButton>
-                  </div>
-                  <div className="space-y-4">
-                    {(versionForm.packageSelections || []).map((pkg, index) => (
-                      <div key={`create-package-${index}`} className="grid gap-4 sm:grid-cols-[1.3fr_1fr_1fr_auto]">
-                        <Field label="Package">
-                          <Select value={pkg.packageId} onChange={onPackageSelectionChange(index, "packageId")}>
-                            <option value="">No package</option>
-                            {packages.map((item) => (
-                              <option key={item.id} value={item.id}>
-                                {item.name}
-                              </option>
-                            ))}
-                          </Select>
-                        </Field>
-                        <Field label="Guest count">
-                          <TextInput
-                            value={pkg.packageGuestCount}
-                            onChange={onPackageSelectionChange(index, "packageGuestCount")}
-                            type="number"
-                            min="1"
-                            placeholder="Event default"
-                          />
-                        </Field>
-                        <Field label="Quantity">
-                          <TextInput
-                            value={pkg.packageQuantity}
-                            onChange={onPackageSelectionChange(index, "packageQuantity")}
-                            type="number"
-                            min="0.01"
-                            step="0.01"
-                          />
-                        </Field>
-                        <div className="flex items-end">
-                          <SecondaryButton type="button" onClick={() => removePackageSelection(index)} className="!px-4 !py-3 text-xs">
-                            Remove
-                          </SecondaryButton>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-gray-100 bg-gray-50/50 p-5">
-                  <p className="mb-4 text-xs font-bold uppercase tracking-widest text-gray-500">Custom Item</p>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <Field label="Name (optional)">
-                      <TextInput value={versionForm.customName} onChange={onVersionFieldChange("customName")} placeholder="Decoration" />
-                    </Field>
-                    <Field label="Price (optional)">
-                      <TextInput
-                        value={versionForm.customPrice}
-                        onChange={onVersionFieldChange("customPrice")}
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        placeholder="12000"
-                      />
-                    </Field>
-                  </div>
-                  <div className="mt-4">
-                    <Field label="Description (optional)">
-                      <TextArea
-                        value={versionForm.customDescription}
-                        onChange={onVersionFieldChange("customDescription")}
-                        placeholder="Stage and floral decoration"
-                      />
-                    </Field>
-                  </div>
-                </div>
-
-                <div className="space-y-4 rounded-2xl border border-gray-100 bg-gray-50/50 p-5">
-                  <Field label="Terms and conditions (optional)">
-                    <TextArea
-                      value={versionForm.termsAndConditions}
-                      onChange={onVersionFieldChange("termsAndConditions")}
-                      placeholder="50% advance required before production begins."
-                    />
-                  </Field>
-                  <Field label="Customer notes for quotation (optional)">
-                    <TextArea
-                      value={versionForm.customerNotes}
-                      onChange={onVersionFieldChange("customerNotes")}
-                      placeholder="Best package for the selected venue and guest count."
-                    />
-                  </Field>
-                </div>
-
-                <div className="rounded-2xl border border-green-100 bg-gradient-to-r from-green-50 to-white p-5">
-                  <p className="mb-4 text-xs font-bold uppercase tracking-widest text-green-700">Quotation Summary</p>
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <div className="rounded-2xl bg-white px-4 py-3 shadow-sm">
-                      <p className="text-xs font-semibold uppercase tracking-widest text-gray-500">Subtotal</p>
-                      <p className="mt-2 text-xl font-semibold text-gray-800">{formatMoney(quotationTotals.subtotalAmount)}</p>
-                    </div>
-                    <div className="rounded-2xl bg-white px-4 py-3 shadow-sm">
-                      <p className="text-xs font-semibold uppercase tracking-widest text-gray-500">Discount</p>
-                      <p className="mt-2 text-xl font-semibold text-rose-600">- {formatMoney(quotationTotals.discountAmount)}</p>
-                    </div>
-                    <div className="rounded-2xl bg-white px-4 py-3 shadow-sm">
-                      <p className="text-xs font-semibold uppercase tracking-widest text-gray-500">Manual Adj.</p>
-                      <p className="mt-2 text-xl font-semibold text-gray-800">{formatMoney(quotationTotals.manualAdjustment)}</p>
-                    </div>
-                    <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 shadow-sm">
-                      <p className="text-xs font-semibold uppercase tracking-widest text-green-700">Final Total</p>
-                      <p className="mt-2 text-2xl font-bold text-green-800">{formatMoney(quotationTotals.finalAmount)}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex justify-end">
-                  <PrimaryButton type="submit" disabled={busy}>
-                    {busy ? <LoadingInline label="Creating..." /> : "Create full quotation"}
-                  </PrimaryButton>
-                </div>
-                <MessageBanner tone="danger" message={error} />
-              </form>
-            </Panel>
-          ) : (
-            <Panel>
-              <SectionHeading
-                number="1"
-                title="Quotation overview"
-                subtitle="This workspace is focused on one quotation. Edit from any previous version and save it as the next version."
-              />
-
-              <div className="mt-5 space-y-5">
-                {selectedEvent ? (
-                  <div className="rounded-2xl border border-green-100 bg-gradient-to-r from-green-50/80 to-white p-5">
-                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-widest text-green-600">Client</p>
-                        <p className="mt-1 text-sm font-semibold text-gray-800">{selectedEvent.client_name}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-widest text-green-600">Occasion</p>
-                        <p className="mt-1 text-sm font-semibold text-gray-800">{selectedEvent.occasion_type}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-widest text-green-600">Date</p>
-                        <p className="mt-1 text-sm font-semibold text-gray-800">{selectedEvent.event_date}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-widest text-green-600">Venue</p>
-                        <p className="mt-1 text-sm font-semibold text-gray-800">{selectedEvent.venue || "Pending"}</p>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50/50 py-10 text-center">
-                    <p className="text-sm text-gray-500">Quotation details are not available yet.</p>
-                  </div>
-                )}
-
-                <MessageBanner tone="danger" message={error} />
-              </div>
-            </Panel>
-          )}
-
-          {/* Section 2: Create Version Form */}
-          {workspaceMode === "existing" && !isReadOnly ? (
-          <Panel>
-            <SectionHeading number="2" title="Create version" subtitle="Fill in the details to generate a new quotation version." />
-
-            <form className="mt-5 space-y-6" onSubmit={onCreateVersion}>
-              {editingVersionMeta ? (
-                <MessageBanner
-                  tone="success"
-                  message={`Editing from version ${editingVersionMeta.versionNumber}. Saving will create the next version for this quotation.`}
+            <div className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden">
+              <div className="border-b border-gray-50 bg-gradient-to-r from-green-50/50 to-transparent px-6 py-5">
+                <SectionHeading
+                  icon={Plus}
+                  title="Create New Quotation"
+                  subtitle="Add the customer and booking details. The quotation will be created in one step."
                 />
-              ) : null}
-
-              <Field label="Selected quotation">
-                <Select value={versionForm.quotationId} onChange={onVersionFieldChange("quotationId")} required>
-                  <option value="">Select quotation</option>
-                  {quotations.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.quote_code}
-                    </option>
-                  ))}
-                </Select>
-              </Field>
-
-              {/* Pricing row */}
-              <div className="rounded-2xl border border-gray-100 bg-gray-50/50 p-5">
-                <p className="mb-4 text-xs font-bold uppercase tracking-widest text-gray-500">Pricing & Discount</p>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  <Field label="Valid until">
-                    <TextInput value={versionForm.validUntil} onChange={onVersionFieldChange("validUntil")} type="date" />
-                  </Field>
-                  <Field label="Discount type">
-                    <Select value={versionForm.discountType} onChange={onVersionFieldChange("discountType")}>
-                      <option value="none">None</option>
-                      <option value="flat">Flat</option>
-                      <option value="percentage">Percentage</option>
-                    </Select>
-                  </Field>
-                  <Field label="Discount value">
-                    <TextInput value={versionForm.discountValue} onChange={onVersionFieldChange("discountValue")} type="number" step="0.01" min="0" />
-                  </Field>
-                  <Field label="Manual adjustment">
-                    <TextInput value={versionForm.manualAdjustment} onChange={onVersionFieldChange("manualAdjustment")} type="number" step="0.01" />
-                  </Field>
-                </div>
               </div>
 
-              {/* Package row */}
-              <div className="rounded-2xl border border-gray-100 bg-gray-50/50 p-5">
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Packages</p>
-                  <SecondaryButton type="button" onClick={addPackageSelection} className="!px-4 !py-2 text-xs">
-                    + Add package
-                  </SecondaryButton>
+              <form className="space-y-0" onSubmit={onCreateNewQuotationFlow}>
+                <CustomerDetailsSection form={newCustomerForm} onFieldChange={onNewCustomerFieldChange} />
+                <BookingDetailsSection form={newCustomerForm} onFieldChange={onNewCustomerFieldChange} />
+                <PricingDiscountSection form={versionForm} onFieldChange={onVersionFieldChange} />
+                <PackagesSection
+                  packageSelections={versionForm.packageSelections}
+                  packages={packages}
+                  selectedEventGuestCount={selectedEvent?.guest_count}
+                  customerGuestCount={newCustomerForm.guestCount}
+                  addPackageSelection={addPackageSelection}
+                  removePackageSelection={removePackageSelection}
+                  onPackageSelectionChange={onPackageSelectionChange}
+                  togglePackageProduct={togglePackageProduct}
+                  getPackagePerPlatePrice={getPackagePerPlatePrice}
+                />
+                <CustomItemSection form={versionForm} onFieldChange={onVersionFieldChange} />
+                <TermsNotesSection form={versionForm} onFieldChange={onVersionFieldChange} />
+                <div className="px-6 py-6">
+                  <PricingSummaryCard totals={quotationTotals} />
                 </div>
-                <div className="space-y-4">
-                  {(versionForm.packageSelections || []).map((pkg, index) => (
-                    <div key={`existing-package-${index}`} className="grid gap-4 sm:grid-cols-[1.3fr_1fr_1fr_auto]">
-                      <Field label="Package">
-                        <Select value={pkg.packageId} onChange={onPackageSelectionChange(index, "packageId")}>
-                          <option value="">No package</option>
-                          {packages.map((item) => (
-                            <option key={item.id} value={item.id}>
-                              {item.name}
-                            </option>
-                          ))}
-                        </Select>
-                      </Field>
-                      <Field label="Guest count">
-                        <TextInput
-                          value={pkg.packageGuestCount}
-                          onChange={onPackageSelectionChange(index, "packageGuestCount")}
-                          type="number"
-                          min="1"
-                          placeholder="Event default"
-                        />
-                      </Field>
-                      <Field label="Quantity">
-                        <TextInput
-                          value={pkg.packageQuantity}
-                          onChange={onPackageSelectionChange(index, "packageQuantity")}
-                          type="number"
-                          min="0.01"
-                          step="0.01"
-                        />
-                      </Field>
-                      <div className="flex items-end">
-                        <SecondaryButton type="button" onClick={() => removePackageSelection(index)} className="!px-4 !py-3 text-xs">
-                          Remove
-                        </SecondaryButton>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
 
-              {/* Custom item row */}
-              <div className="rounded-2xl border border-gray-100 bg-gray-50/50 p-5">
-                <p className="mb-4 text-xs font-bold uppercase tracking-widest text-gray-500">Custom Item</p>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Name (optional)">
-                    <TextInput value={versionForm.customName} onChange={onVersionFieldChange("customName")} placeholder="Decoration" />
-                  </Field>
-                  <Field label="Price (optional)">
-                    <TextInput
-                      value={versionForm.customPrice}
-                      onChange={onVersionFieldChange("customPrice")}
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      placeholder="12000"
-                    />
-                  </Field>
+                {/* Submit */}
+                <div className="border-t border-gray-100 bg-gradient-to-r from-gray-50/50 to-transparent px-6 py-5">
+                  <div className="flex items-center justify-between">
+                    <MessageBanner tone="danger" message={error} />
+                    <PrimaryButton type="submit" disabled={busy} className="rounded-xl !px-6 !py-3.5 shadow-md hover:shadow-lg transition-shadow">
+                      {busy ? (
+                        <LoadingInline label="Creating..." />
+                      ) : (
+                        <span className="inline-flex items-center gap-2">
+                          <Check className="h-4 w-4" strokeWidth={2.5} />
+                          Create Full Quotation
+                        </span>
+                      )}
+                    </PrimaryButton>
+                  </div>
                 </div>
-                <div className="mt-4">
-                  <Field label="Description (optional)">
-                    <TextArea
-                      value={versionForm.customDescription}
-                      onChange={onVersionFieldChange("customDescription")}
-                      placeholder="Stage and floral decoration"
-                    />
-                  </Field>
-                </div>
-              </div>
-
-              {/* Notes */}
-              <div className="space-y-4">
-                <Field label="Terms and conditions (optional)">
-                  <TextArea
-                    value={versionForm.termsAndConditions}
-                    onChange={onVersionFieldChange("termsAndConditions")}
-                    placeholder="50% advance required before production begins."
+              </form>
+            </div>
+          ) : (
+            /* ═══════════════════════════════════════════════════════
+                EXISTING MODE — View / Edit
+            ═══════════════════════════════════════════════════════ */
+            <>
+              {/* ─── Event Overview Card ─── */}
+              <div className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden">
+                <div className="border-b border-gray-50 bg-gradient-to-r from-green-50/50 to-transparent px-6 py-5">
+                  <SectionHeading
+                    icon={FileText}
+                    title={isReadOnly ? "Quotation Overview" : "Quotation Overview"}
+                    subtitle={
+                      isReadOnly
+                        ? "Review the complete saved quotation here."
+                        : "This quotation is loaded and ready to edit."
+                    }
                   />
-                </Field>
-                <Field label="Customer notes (optional)">
-                  <TextArea
-                    value={versionForm.customerNotes}
-                    onChange={onVersionFieldChange("customerNotes")}
-                    placeholder="Best package for the selected venue and guest count."
-                  />
-                </Field>
-              </div>
-
-              <div className="rounded-2xl border border-green-100 bg-gradient-to-r from-green-50 to-white p-5">
-                <p className="mb-4 text-xs font-bold uppercase tracking-widest text-green-700">Quotation Summary</p>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  <div className="rounded-2xl bg-white px-4 py-3 shadow-sm">
-                    <p className="text-xs font-semibold uppercase tracking-widest text-gray-500">Subtotal</p>
-                    <p className="mt-2 text-xl font-semibold text-gray-800">{formatMoney(quotationTotals.subtotalAmount)}</p>
-                  </div>
-                  <div className="rounded-2xl bg-white px-4 py-3 shadow-sm">
-                    <p className="text-xs font-semibold uppercase tracking-widest text-gray-500">Discount</p>
-                    <p className="mt-2 text-xl font-semibold text-rose-600">- {formatMoney(quotationTotals.discountAmount)}</p>
-                  </div>
-                  <div className="rounded-2xl bg-white px-4 py-3 shadow-sm">
-                    <p className="text-xs font-semibold uppercase tracking-widest text-gray-500">Manual Adj.</p>
-                    <p className="mt-2 text-xl font-semibold text-gray-800">{formatMoney(quotationTotals.manualAdjustment)}</p>
-                  </div>
-                  <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 shadow-sm">
-                    <p className="text-xs font-semibold uppercase tracking-widest text-green-700">Final Total</p>
-                    <p className="mt-2 text-2xl font-bold text-green-800">{formatMoney(quotationTotals.finalAmount)}</p>
-                  </div>
                 </div>
-              </div>
 
-              <div className="flex justify-end border-t border-gray-100 pt-5">
-                <PrimaryButton type="submit" disabled={busy || !versionForm.quotationId}>
-                  {busy ? <LoadingInline label="Saving..." /> : "Save quotation version"}
-                </PrimaryButton>
-              </div>
-            </form>
-          </Panel>
-          ) : null}
-
-          {/* Section 3: Quotation Details & Versions */}
-          {workspaceMode === "existing" ? (
-          <Panel>
-            <SectionHeading
-              number={isReadOnly ? "2" : "3"}
-              title="Quotation details"
-              subtitle={
-                isReadOnly
-                  ? "Review the saved quotation and version history."
-                  : "Review saved versions and accept the final one."
-              }
-            />
-
-            <div className="mt-5">
-              {selectedQuotation ? (
-                <div className="space-y-5">
-                  {isReadOnly ? (
-                    <MessageBanner
-                      tone="success"
-                      message="Read-only view. Use the edit icon from the quotation list if you want to create the next version."
-                    />
-                  ) : null}
-                  <div className="rounded-2xl border border-green-100 bg-gradient-to-r from-green-50/80 to-white p-5">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                        <p className="text-xs font-bold uppercase tracking-widest text-green-600">
-                          {selectedQuotation.quote_code}
-                        </p>
-                        <h3 className="mt-1.5 text-lg font-bold text-gray-800">
-                          {selectedQuotation.client_name} · {selectedQuotation.occasion_type}
-                        </h3>
-                        <p className="mt-1 text-sm text-gray-500">
-                          {selectedQuotation.event_date} at {selectedQuotation.venue}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {selectedQuotation.versions?.length > 0 ? (
-                    <div className="space-y-3">
-                      {selectedQuotation.versions.map((version) => (
-                        <div
-                          key={version.id}
-                          className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-gray-100 bg-white p-5 transition-all duration-200 hover:border-green-100 hover:shadow-sm"
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-50 text-sm font-bold text-green-700">
-                              v{version.version_number}
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <p className="text-sm font-semibold text-gray-800">Version {version.version_number}</p>
-                                <VersionStatusBadge status={version.status} />
-                              </div>
-                              <p className="mt-0.5 text-xs text-gray-500">
-                                Valid until {version.valid_until || "—"}
-                              </p>
-                            </div>
+                <div className="p-6">
+                  {selectedEvent ? (
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                      {[
+                        { icon: User, label: "Client", value: selectedEvent.client_name },
+                        { icon: Gift, label: "Occasion", value: selectedEvent.occasion_type },
+                        { icon: CalendarDays, label: "Event Date", value: formatDisplayDate(selectedEvent.event_date) },
+                        { icon: MapPin, label: "Venue", value: selectedEvent.venue || "Pending" },
+                      ].map((item) => (
+                        <div key={item.label} className="flex items-start gap-3 rounded-xl border border-gray-100 bg-gray-50/30 p-4 transition-all duration-200 hover:bg-white hover:shadow-sm">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-green-50 to-green-100">
+                            <item.icon className="h-4 w-4 text-green-600" />
                           </div>
-
-                          <div className="flex items-center gap-6">
-                            <div className="text-right">
-                              <p className="text-xs text-gray-500">Subtotal</p>
-                              <p className="text-sm font-semibold text-gray-700">{version.subtotal_amount ?? "—"}</p>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-xs text-gray-500">Discount</p>
-                              <p className="text-sm font-semibold text-gray-700">{version.discount_amount ?? "—"}</p>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-xs text-gray-500">Final</p>
-                              <p className="text-sm font-bold text-gray-800">{version.final_amount ?? "—"}</p>
-                            </div>
-                            {!isReadOnly ? (
-                              <>
-                                <SecondaryButton
-                                  type="button"
-                                  onClick={() => onEditPreviousVersion(version.id)}
-                                  disabled={busy}
-                                  className="!px-4 !py-2 text-xs"
-                                >
-                                  Edit as next version
-                                </SecondaryButton>
-                                <SecondaryButton
-                                  type="button"
-                                  onClick={() => onAcceptVersion(version.id)}
-                                  disabled={busy || version.status === "accepted"}
-                                  className="!px-4 !py-2 text-xs"
-                                >
-                                  {version.status === "accepted" ? "Accepted" : "Accept"}
-                                </SecondaryButton>
-                              </>
-                            ) : null}
+                          <div>
+                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">{item.label}</p>
+                            <p className="mt-1 text-sm font-semibold text-gray-800">{item.value}</p>
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="rounded-2xl border border-dashed border-green-300 bg-green-50/50 py-10 text-center">
-                      <p className="text-sm font-semibold text-gray-700">No versions yet</p>
-                      <p className="mt-1 text-sm text-gray-500">Create a version from the form above to see it here.</p>
+                    <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50/50 py-12 text-center">
+                      <FileText className="mx-auto h-8 w-8 text-gray-300" />
+                      <p className="mt-3 text-sm text-gray-400">Quotation details are not available yet.</p>
                     </div>
                   )}
                 </div>
-              ) : (
-                <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50/50 py-10 text-center">
-                  <p className="text-sm text-gray-500">Select an event and quotation to review its saved versions.</p>
+              </div>
+
+              {/* ─── READ-ONLY View ─── */}
+              {isReadOnly ? (
+                activeVersionDetail ? (
+                  <div className="space-y-6">
+                    {/* Version Header Card */}
+                    <div className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden">
+                      <div className="bg-gradient-to-r from-slate-800 to-slate-900 px-6 py-5">
+                        <div className="flex flex-wrap items-start justify-between gap-4">
+                          <div>
+                            <p className="text-xs font-bold uppercase tracking-[0.2em] text-green-400">
+                              {activeVersionDetail.quote_code}
+                            </p>
+                            <h3 className="mt-2 text-xl font-bold text-white">
+                              {activeVersionDetail.client_name} — {activeVersionDetail.occasion_type}
+                            </h3>
+                            <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-slate-300">
+                              <span className="inline-flex items-center gap-1.5">
+                                <CalendarDays className="h-3.5 w-3.5" />
+                                {formatDisplayDate(activeVersionDetail.event_date)}
+                              </span>
+                              <span className="inline-flex items-center gap-1.5">
+                                <MapPin className="h-3.5 w-3.5" />
+                                {activeVersionDetail.venue || "Venue not added"}
+                              </span>
+                              <span className="inline-flex items-center gap-1.5">
+                                <Layers className="h-3.5 w-3.5" />
+                                Version {activeVersionDetail.version_number}
+                              </span>
+                            </div>
+                          </div>
+                          <VersionStatusBadge status={activeVersionDetail.status} />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Pricing Details */}
+                    <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-6">
+                      <div className="mb-5 flex items-center gap-3">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-gray-50 to-gray-100">
+                          <IndianRupee className="h-4 w-4 text-gray-500" />
+                        </div>
+                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500">Pricing & Discount</p>
+                      </div>
+                      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                        {[
+                          { label: "Valid Until", value: formatDisplayDate(activeVersionDetail.valid_until) },
+                          { label: "Discount Type", value: activeVersionDetail.discount_type || "None", capitalize: true },
+                          { label: "Discount Value", value: formatMoney(activeVersionDetail.discount_value) },
+                          { label: "Manual Adjustment", value: formatMoney(activeVersionDetail.manual_adjustment) },
+                        ].map((item) => (
+                          <div key={item.label} className="rounded-xl bg-gray-50/50 p-4">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">{item.label}</p>
+                            <p className={`mt-2 text-sm font-bold text-gray-800 ${item.capitalize ? "capitalize" : ""}`}>{item.value}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Line Items */}
+                    <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-6">
+                      <div className="mb-5 flex items-center gap-3">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-gray-50 to-gray-100">
+                          <Package className="h-4 w-4 text-gray-500" />
+                        </div>
+                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500">Packages & Items</p>
+                      </div>
+                      {activeVersionDetail.lineItems?.length ? (
+                        <div className="space-y-3">
+                          {activeVersionDetail.lineItems.map((item) => (
+                            <div
+                              key={item.id}
+                              className="group rounded-xl border border-gray-100 bg-gradient-to-r from-gray-50/30 to-transparent p-5 transition-all duration-200 hover:border-gray-200 hover:shadow-sm"
+                            >
+                              <div className="flex flex-wrap items-start justify-between gap-3">
+                                <div className="flex items-start gap-3">
+                                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-50 to-purple-100">
+                                    <Package className="h-4 w-4 text-violet-600" />
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-bold text-gray-800">{item.item_name || "Custom item"}</p>
+                                    <p className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">
+                                      {item.catalog_type} {item.pricing_type ? `/ ${item.pricing_type.replace("_", " ")}` : ""}
+                                    </p>
+                                    {item.item_description ? (
+                                      <p className="mt-2 text-sm text-gray-500">{item.item_description}</p>
+                                    ) : null}
+                                  </div>
+                                </div>
+                                <p className="text-base font-bold text-gray-800">{formatMoney(item.line_total)}</p>
+                              </div>
+                              <div className="mt-4 flex flex-wrap gap-3">
+                                {[
+                                  { label: "Qty", value: item.quantity ?? "—" },
+                                  { label: "Guests", value: item.guest_count ?? "—" },
+                                  { label: "Unit Price", value: formatMoney(item.unit_price) },
+                                ].map((detail) => (
+                                  <span
+                                    key={detail.label}
+                                    className="inline-flex items-center gap-1.5 rounded-lg bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-500"
+                                  >
+                                    <span className="text-gray-400">{detail.label}:</span>
+                                    <span className="font-semibold text-gray-700">{detail.value}</span>
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50/50 py-8 text-center">
+                          <Package className="mx-auto h-6 w-6 text-gray-300" />
+                          <p className="mt-2 text-sm text-gray-400">No packages or custom items were added.</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Terms & Notes */}
+                    <div className="grid gap-6 lg:grid-cols-2">
+                      <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-6">
+                        <div className="mb-4 flex items-center gap-3">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-gray-50 to-gray-100">
+                            <Shield className="h-4 w-4 text-gray-500" />
+                          </div>
+                          <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500">Terms & Conditions</p>
+                        </div>
+                        <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-600">
+                          {activeVersionDetail.terms_and_conditions || "No terms added."}
+                        </p>
+                      </div>
+                      <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-6">
+                        <div className="mb-4 flex items-center gap-3">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-gray-50 to-gray-100">
+                            <StickyNote className="h-4 w-4 text-gray-500" />
+                          </div>
+                          <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500">Customer Notes</p>
+                        </div>
+                        <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-600">
+                          {activeVersionDetail.customer_notes || "No customer notes added."}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Summary */}
+                    <PricingSummaryCard totals={{
+                      subtotalAmount: activeVersionDetail.subtotal_amount,
+                      discountAmount: activeVersionDetail.discount_amount,
+                      manualAdjustment: activeVersionDetail.manual_adjustment,
+                      finalAmount: activeVersionDetail.final_amount,
+                    }} />
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-gray-100 bg-white shadow-sm py-20 text-center">
+                    <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100">
+                      <FileText className="h-6 w-6 text-gray-300" />
+                    </div>
+                    <p className="text-sm text-gray-400">Loading saved quotation details...</p>
+                  </div>
+                )
+              ) : null}
+
+              <MessageBanner tone="danger" message={error} />
+            </>
+          )}
+
+          {/* ═══════════════════════════════════════════════════════
+              EDIT MODE — Version Form
+          ═══════════════════════════════════════════════════════ */}
+          {workspaceMode === "existing" && !isReadOnly ? (
+            <div className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden">
+              <div className="border-b border-gray-50 bg-gradient-to-r from-green-50/50 to-transparent px-6 py-5">
+                <SectionHeading
+                  icon={Edit3}
+                  title="Edit Quotation"
+                  subtitle="All latest quotation details are loaded here for quick editing."
+                />
+              </div>
+
+              <form className="space-y-0" onSubmit={onCreateVersion}>
+                {/* Edit banner */}
+                {editingVersionMeta ? (
+                  <div className="mx-6 mt-5 flex items-center gap-3 rounded-xl border border-blue-200/60 bg-gradient-to-r from-blue-50 to-blue-100/30 px-4 py-3">
+                    <Layers className="h-4 w-4 text-blue-600 shrink-0" />
+                    <p className="text-sm font-medium text-blue-700">
+                      Editing from version {editingVersionMeta.versionNumber}. Saving will create the next version.
+                    </p>
+                  </div>
+                ) : shouldPrefillLatestVersion ? (
+                  <div className="mx-6 mt-5 flex items-center gap-3 rounded-xl border border-emerald-200/60 bg-gradient-to-r from-emerald-50 to-emerald-100/30 px-4 py-3">
+                    <Check className="h-4 w-4 text-emerald-600 shrink-0" />
+                    <p className="text-sm font-medium text-emerald-700">
+                      Latest quotation data loaded automatically. Edit and save to create the next version.
+                    </p>
+                  </div>
+                ) : null}
+
+                {/* Quotation select */}
+                <div className="px-6 pt-5">
+                  <Field label="Selected quotation">
+                    <Select value={versionForm.quotationId} onChange={onVersionFieldChange("quotationId")} required>
+                      <option value="">Select quotation</option>
+                      {quotations.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.quote_code}
+                        </option>
+                      ))}
+                    </Select>
+                  </Field>
                 </div>
-              )}
+
+                <PricingDiscountSection form={versionForm} onFieldChange={onVersionFieldChange} />
+                <PackagesSection
+                  packageSelections={versionForm.packageSelections}
+                  packages={packages}
+                  selectedEventGuestCount={selectedEvent?.guest_count}
+                  customerGuestCount={newCustomerForm.guestCount}
+                  addPackageSelection={addPackageSelection}
+                  removePackageSelection={removePackageSelection}
+                  onPackageSelectionChange={onPackageSelectionChange}
+                  togglePackageProduct={togglePackageProduct}
+                  getPackagePerPlatePrice={getPackagePerPlatePrice}
+                />
+                <CustomItemSection form={versionForm} onFieldChange={onVersionFieldChange} />
+                <TermsNotesSection form={versionForm} onFieldChange={onVersionFieldChange} />
+                <div className="px-6 py-6">
+                  <PricingSummaryCard totals={quotationTotals} />
+                </div>
+
+                {/* Submit */}
+                <div className="border-t border-gray-100 bg-gradient-to-r from-gray-50/50 to-transparent px-6 py-5">
+                  <div className="flex items-center justify-between gap-4">
+                    <MessageBanner tone="danger" message={error} />
+                    <PrimaryButton type="submit" disabled={busy || !versionForm.quotationId} className="rounded-xl !px-6 !py-3.5 shadow-md hover:shadow-lg transition-shadow">
+                      {busy ? (
+                        <LoadingInline label="Saving..." />
+                      ) : (
+                        <span className="inline-flex items-center gap-2">
+                          <Check className="h-4 w-4" strokeWidth={2.5} />
+                          Save Quotation Version
+                        </span>
+                      )}
+                    </PrimaryButton>
+                  </div>
+                </div>
+              </form>
             </div>
-          </Panel>
           ) : null}
         </div>
       )}

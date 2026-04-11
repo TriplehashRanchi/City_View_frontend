@@ -5,12 +5,8 @@ import { useRouter } from "next/navigation";
 import {
   ChevronLeft,
   ChevronRight,
-  Layers3,
   Pencil,
   Search,
-  Sparkles,
-  Tag,
-  Users,
 } from "lucide-react";
 import {
   LoadingState,
@@ -34,7 +30,8 @@ function formatCurrency(value) {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(amount);
 }
 
@@ -85,8 +82,7 @@ export default function PackagesPage() {
         pkg.description?.toLowerCase().includes(term) ||
         pkg.pricing_type?.toLowerCase().includes(term) ||
         pkg.status?.toLowerCase().includes(term) ||
-        String(pkg.base_price || "").includes(term) ||
-        String(pkg.minimum_guest_count || "").includes(term)
+        String(pkg.base_price || "").includes(term)
       );
     });
   }, [packages, searchTerm]);
@@ -97,35 +93,11 @@ export default function PackagesPage() {
     currentPage * itemsPerPage
   );
 
-  const stats = useMemo(() => {
-    const activePackages = packages.filter((pkg) => pkg.status === "active").length;
-    const perPersonPackages = packages.filter((pkg) => pkg.pricing_type === "per_person").length;
-    const averageBasePrice = packages.length
-      ? Math.round(
-          packages.reduce((sum, pkg) => sum + Number(pkg.base_price || 0), 0) / packages.length
-        )
-      : 0;
-    const averageGuestMinimum = packages.length
-      ? Math.round(
-          packages.reduce((sum, pkg) => sum + Number(pkg.minimum_guest_count || 0), 0) / packages.length
-        )
-      : 0;
-
-    return {
-      totalPackages: packages.length,
-      activePackages,
-      perPersonPackages,
-      averageBasePrice,
-      averageGuestMinimum,
-    };
-  }, [packages]);
-
   return (
     <div className="mx-auto max-w-7xl space-y-8">
       <PageIntro
         eyebrow="Packages"
         title="Package builder"
-        description="Review reusable packages and jump into the dedicated package builder with a cleaner catalog view."
         action={
           <PrimaryButton onClick={() => router.push("/packages/new")} className="rounded-xl px-5 py-3 shadow-sm">
             Add Package
@@ -137,13 +109,6 @@ export default function PackagesPage() {
 
       <div className="grid gap-6">
         <Panel
-          title="Packages"
-          subtitle="Search, review and edit your reusable package catalog from one clean workspace."
-          aside={
-            <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-600">
-              {filteredPackages.length} result{filteredPackages.length === 1 ? "" : "s"}
-            </div>
-          }
         >
           <div className="space-y-6">
             <div className="flex flex-col gap-4 border-b border-slate-100 pb-5 lg:flex-row lg:items-center lg:justify-between">
@@ -151,7 +116,7 @@ export default function PackagesPage() {
                 <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
-                  placeholder="Search package, pricing, guest count or status"
+                  placeholder="Search package, per plate cost or status"
                   value={searchTerm}
                   onChange={(event) => setSearchTerm(event.target.value)}
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-11 py-3 text-sm text-slate-700 outline-none transition focus:border-green-400 focus:bg-white focus:ring-2 focus:ring-green-100"
@@ -171,8 +136,7 @@ export default function PackagesPage() {
                     <thead className="bg-slate-50">
                       <tr className="text-xs uppercase tracking-[0.2em] text-slate-500">
                         <th className="px-5 py-4 font-semibold">Package</th>
-                        <th className="px-5 py-4 font-semibold">Pricing</th>
-                        <th className="px-5 py-4 font-semibold">Guests</th>
+                        <th className="px-5 py-4 font-semibold">Per plate</th>
                         <th className="px-5 py-4 font-semibold">Status</th>
                         <th className="px-5 py-4 text-right font-semibold">Action</th>
                       </tr>
@@ -193,14 +157,8 @@ export default function PackagesPage() {
                               {formatCurrency(pkg.base_price)}
                             </p>
                             {/* <p className="mt-1 text-sm text-slate-500">
-                              {formatLabel(pkg.pricing_type)}
+                              Estimated package cost per plate
                             </p> */}
-                          </td>
-                          <td className="px-5 py-4">
-                            <p className="text-sm font-semibold text-slate-900">
-                              {Number(pkg.minimum_guest_count || 0)}
-                            </p>
-                            {/* <p className="mt-1 text-sm text-slate-500">Minimum guests</p> */}
                           </td>
                           <td className="px-5 py-4">
                             <span

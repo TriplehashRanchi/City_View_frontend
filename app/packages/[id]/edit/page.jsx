@@ -11,12 +11,31 @@ import {
   Panel,
   PrimaryButton,
   Select,
-  TextArea,
   TextInput,
 } from "@/components/AdminUI";
 import { catalogApi } from "@/services/modules";
 
 const emptyProductRow = { productId: "" };
+const roundMoney = (value) => Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+
+const calculateLineTotal = ({ pricingType, unitPrice, quantity = 1, guestCount = 1 }) => {
+  const safeUnitPrice = Number(unitPrice || 0);
+  const safeQuantity = Math.max(Number(quantity || 0), 0);
+  const safeGuestCount = Math.max(Number(guestCount || 0), 0);
+
+  if (pricingType === "per_person") return roundMoney(safeUnitPrice * Math.max(safeGuestCount, 1) * Math.max(safeQuantity, 1));
+  if (pricingType === "per_unit") return roundMoney(safeUnitPrice * Math.max(safeQuantity, 1));
+  return roundMoney(safeUnitPrice * Math.max(safeQuantity, 1));
+};
+
+const formatCurrency = (value) =>
+  new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(Number(value || 0));
+
 const formatLabel = (value) =>
   String(value || "")
     .split("_")
@@ -35,77 +54,65 @@ export default function EditPackagePage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      setError("");
-      const [packageResponse, productsResponse] = await Promise.all([
-        catalogApi.getPackage(packageId),
-        catalogApi.listProducts({ status: "active", limit: 100 }),
-      ]);
-
-      const pkg = packageResponse.data;
-      setProducts(productsResponse.data || []);
-      setForm({
-        name: pkg?.name || "",
-        description: pkg?.description || "",
-        minimumGuestCount: String(pkg?.minimum_guest_count || 1),
-        status: pkg?.status || "active",
-        products:
-          pkg?.products?.length
-            ? pkg.products.map((item) => ({
-                productId: String(item.product_id),
-              }))
-            : [{ ...emptyProductRow }],
-        services:
-          pkg?.services?.length
-            ? pkg.services.map((item) => ({
-                serviceId: String(item.service_id),
-                quantity: String(item.quantity),
-                notes: item.notes || "",
-              }))
-            : [],
-      });
-    } catch {
-      setError("Unable to load package details.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
     if (!packageId) return;
+
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        setError("");
+        const [packageResponse, productsResponse] = await Promise.all([
+          catalogApi.getPackage(packageId),
+          catalogApi.listProducts({ status: "active", limit: 100 }),
+        ]);
+
+        const pkg = packageResponse.data;
+        setProducts(productsResponse.data || []);
+        setForm({
+          name: pkg?.name || "",
+          description: pkg?.description || "",
+          status: pkg?.status || "active",
+          products:
+            pkg?.products?.length
+              ? pkg.products.map((item) => ({
+                  productId: String(item.product_id),
+                }))
+              : [{ ...emptyProductRow }],
+          services:
+            pkg?.services?.length
+              ? pkg.services.map((item) => ({
+                  serviceId: String(item.service_id),
+                  quantity: String(item.quantity),
+                  notes: item.notes || "",
+                }))
+              : [],
+        });
+      } catch {
+        setError("Unable to load package details.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadData();
   }, [packageId]);
 
-  const roundMoney = (value) => Math.round((Number(value) + Number.EPSILON) * 100) / 100;
-
-  const calculateLineTotal = ({ pricingType, unitPrice, quantity, guestCount }) => {
-    const safeUnitPrice = Number(unitPrice || 0);
-    const safeQuantity = Math.max(Number(quantity || 0), 0);
-    const safeGuestCount = Math.max(Number(guestCount || 0), 0);
-
-    if (pricingType === "per_person") return roundMoney(safeUnitPrice * safeGuestCount * Math.max(safeQuantity, 1));
-    if (pricingType === "per_unit") return roundMoney(safeUnitPrice * safeQuantity);
-    return roundMoney(safeUnitPrice * Math.max(safeQuantity, 1));
-  };
-
-  const computedTotal = useMemo(() => {
+  const estimatedPerPlate = useMemo(() => {
     if (!form) return 0;
-    const guestCount = Number(form.minimumGuestCount || 1);
 
-    const productTotal = form.products.reduce((sum, item) => {
-      const product = products.find((entry) => String(entry.id) === String(item.productId));
-      if (!product) return sum;
-      return sum + calculateLineTotal({
-        pricingType: product.pricing_type,
-        unitPrice: product.unit_price,
-        quantity: 1,
-        guestCount,
-      });
-    }, 0);
+    return roundMoney(
+      form.products.reduce((sum, item) => {
+        const product = products.find((entry) => String(entry.id) === String(item.productId));
+        if (!product) return sum;
 
-    return roundMoney(productTotal);
+        return sum + calculateLineTotal({
+          pricingType: product.pricing_type,
+          unitPrice: product.unit_price,
+          quantity: 1,
+          guestCount: 1,
+        });
+      }, 0)
+    );
   }, [form, products]);
 
   const onFieldChange = (key) => (event) => {
@@ -155,7 +162,6 @@ export default function EditPackagePage() {
         ...form,
         name: form.name.trim(),
         description: form.description || null,
-        minimumGuestCount: Number(form.minimumGuestCount || 1),
         products: form.products
           .filter((item) => item.productId)
           .map((item) => ({
@@ -220,24 +226,7 @@ export default function EditPackagePage() {
             <Field label="Package name">
               <TextInput value={form.name} onChange={onFieldChange("name")} required />
             </Field>
-
-            <Field label="Minimum guest count">
-              <TextInput
-                type="number"
-                min="1"
-                value={form.minimumGuestCount}
-                onChange={onFieldChange("minimumGuestCount")}
-              />
-            </Field>
           </div>
-
-          {/* <div className="mt-4 rounded-[1.5rem] border border-green-200 bg-green-50 px-5 py-4">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-green-700">Computed package total</p>
-            <p className="mt-2 text-3xl font-semibold text-gray-800">Rs. {computedTotal.toFixed(2)}</p>
-            <p className="mt-2 text-sm text-gray-500">
-              Total is calculated automatically from selected products, quantities, and minimum guest count.
-            </p>
-          </div> */}
         </Panel>
 
         <Panel
@@ -295,6 +284,14 @@ export default function EditPackagePage() {
                 );
               })()
             ))}
+          </div>
+
+          <div className="mt-4 rounded-[1.5rem] border border-green-200 bg-green-50 px-5 py-4">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-green-700">Estimated cost per plate</p>
+            <p className="mt-2 text-3xl font-semibold text-slate-900">{formatCurrency(estimatedPerPlate)}</p>
+            <p className="mt-2 text-sm text-slate-600">
+              Based on the currently selected products in this package.
+            </p>
           </div>
         </Panel>
 

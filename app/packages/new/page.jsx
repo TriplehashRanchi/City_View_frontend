@@ -11,7 +11,6 @@ import {
   Panel,
   PrimaryButton,
   Select,
-  TextArea,
   TextInput,
 } from "@/components/AdminUI";
 import { catalogApi } from "@/services/modules";
@@ -21,7 +20,6 @@ const emptyProductRow = { productId: "" };
 const initialForm = {
   name: "",
   description: "",
-  minimumGuestCount: "1",
   status: "active",
   products: [emptyProductRow],
   services: [],
@@ -29,15 +27,23 @@ const initialForm = {
 
 const roundMoney = (value) => Math.round((Number(value) + Number.EPSILON) * 100) / 100;
 
-const calculateLineTotal = ({ pricingType, unitPrice, quantity, guestCount }) => {
+const calculateLineTotal = ({ pricingType, unitPrice, quantity = 1, guestCount = 1 }) => {
   const safeUnitPrice = Number(unitPrice || 0);
   const safeQuantity = Math.max(Number(quantity || 0), 0);
   const safeGuestCount = Math.max(Number(guestCount || 0), 0);
 
-  if (pricingType === "per_person") return roundMoney(safeUnitPrice * safeGuestCount * Math.max(safeQuantity, 1));
-  if (pricingType === "per_unit") return roundMoney(safeUnitPrice * safeQuantity);
+  if (pricingType === "per_person") return roundMoney(safeUnitPrice * Math.max(safeGuestCount, 1) * Math.max(safeQuantity, 1));
+  if (pricingType === "per_unit") return roundMoney(safeUnitPrice * Math.max(safeQuantity, 1));
   return roundMoney(safeUnitPrice * Math.max(safeQuantity, 1));
 };
+
+const formatCurrency = (value) =>
+  new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(Number(value || 0));
 
 const formatLabel = (value) =>
   String(value || "")
@@ -55,39 +61,38 @@ export default function NewPackagePage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      setError("");
-      const productsResponse = await catalogApi.listProducts({ status: "active", limit: 100 });
-      setProducts(productsResponse.data || []);
-    } catch {
-      setError("Unable to load package builder data.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        setError("");
+        const productsResponse = await catalogApi.listProducts({ status: "active", limit: 100 });
+        setProducts(productsResponse.data || []);
+      } catch {
+        setError("Unable to load package builder data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadData();
   }, []);
 
-  const computedTotal = useMemo(() => {
-    const guestCount = Number(form.minimumGuestCount || 1);
+  const estimatedPerPlate = useMemo(() => {
+    return roundMoney(
+      form.products.reduce((sum, item) => {
+        const product = products.find((entry) => String(entry.id) === String(item.productId));
+        if (!product) return sum;
 
-    const productTotal = form.products.reduce((sum, item) => {
-      const product = products.find((entry) => String(entry.id) === String(item.productId));
-      if (!product) return sum;
-      return sum + calculateLineTotal({
-        pricingType: product.pricing_type,
-        unitPrice: product.unit_price,
-        quantity: 1,
-        guestCount,
-      });
-    }, 0);
-
-    return roundMoney(productTotal);
-  }, [form.minimumGuestCount, form.products, products]);
+        return sum + calculateLineTotal({
+          pricingType: product.pricing_type,
+          unitPrice: product.unit_price,
+          quantity: 1,
+          guestCount: 1,
+        });
+      }, 0)
+    );
+  }, [form.products, products]);
 
   const onFieldChange = (key) => (event) => {
     if (message) setMessage("");
@@ -135,7 +140,6 @@ export default function NewPackagePage() {
         ...form,
         name: form.name.trim(),
         description: null,
-        minimumGuestCount: Number(form.minimumGuestCount || 1),
         products: form.products
           .filter((item) => item.productId)
           .map((item) => ({
@@ -195,24 +199,7 @@ export default function NewPackagePage() {
             <Field label="Package name">
               <TextInput value={form.name} onChange={onFieldChange("name")} required />
             </Field>
-
-            <Field label="Minimum guest count">
-              <TextInput
-                type="number"
-                min="1"
-                value={form.minimumGuestCount}
-                onChange={onFieldChange("minimumGuestCount")}
-              />
-            </Field>
           </div>
-
-          {/* <div className="mt-4 rounded-[1.5rem] border border-green-200 bg-green-50 px-5 py-4">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-green-700">Computed package total</p>
-            <p className="mt-2 text-3xl font-semibold text-gray-800">Rs. {computedTotal.toFixed(2)}</p>
-            <p className="mt-2 text-sm text-gray-500">
-              Total is calculated automatically from selected products, quantities, and minimum guest count.
-            </p>
-          </div> */}
         </Panel>
 
         <Panel
@@ -270,6 +257,14 @@ export default function NewPackagePage() {
                 );
               })()
             ))}
+          </div>
+
+          <div className="mt-4 rounded-[1.5rem] border border-green-200 bg-green-50 px-5 py-4">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-green-700">Estimated cost per plate</p>
+            <p className="mt-2 text-3xl font-semibold text-slate-900">{formatCurrency(estimatedPerPlate)}</p>
+            <p className="mt-2 text-sm text-slate-600">
+              Based on the currently selected products in this package.
+            </p>
           </div>
         </Panel>
 
