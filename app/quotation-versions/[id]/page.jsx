@@ -96,6 +96,16 @@ export default function QuotationVersionDetailPage() {
                 </SecondaryButton>
               ) : null}
             </div>
+            
+          </Panel>
+          <Panel title="Price Summary">
+            <div className="editorial-muted p-4 text-sm leading-7 text-[#2f3331]">
+              <div className="flex items-center justify-between"><span>Per Person</span><span>{formatCurrency(version?.per_person_price)}</span></div>
+              <div className="mt-2 flex items-center justify-between"><span>Guest Count</span><span>{version?.guest_count || 0}</span></div>
+              <div className="mt-2 flex items-center justify-between"><span>Subtotal</span><span>{formatCurrency(version?.subtotal_amount)}</span></div>
+              <div className="mt-2 flex items-center justify-between"><span>Discount</span><span>{formatCurrency(version?.discount_amount || version?.discount_value)}</span></div>
+              <div className="mt-4 flex items-center justify-between font-semibold"><span>Final Amount</span><span>{formatCurrency(version?.final_amount)}</span></div>
+            </div>
           </Panel>
         </div>
 
@@ -121,25 +131,11 @@ export default function QuotationVersionDetailPage() {
             </div>
           </Panel>
 
-          <Panel title="Price Summary">
-            <div className="editorial-muted p-4 text-sm leading-7 text-[#2f3331]">
-              <div className="flex items-center justify-between"><span>Per Person</span><span>{formatCurrency(version?.per_person_price)}</span></div>
-              <div className="mt-2 flex items-center justify-between"><span>Guest Count</span><span>{version?.guest_count || 0}</span></div>
-              <div className="mt-2 flex items-center justify-between"><span>Subtotal</span><span>{formatCurrency(version?.subtotal_amount)}</span></div>
-              <div className="mt-2 flex items-center justify-between"><span>Discount</span><span>{formatCurrency(version?.discount_amount || version?.discount_value)}</span></div>
-              <div className="mt-4 flex items-center justify-between font-semibold"><span>Final Amount</span><span>{formatCurrency(version?.final_amount)}</span></div>
-            </div>
-          </Panel>
+          
 
-          <Panel title="PDF Preview Data">
-            <div className="space-y-4 text-sm leading-7 text-[#2f3331]">
-              <p><span className="text-[#5d5e61]">Branding:</span> {pdfData?.restaurant_name || pdfData?.branding?.name || "CityView"}</p>
-              <p><span className="text-[#5d5e61]">Package Badge:</span> {pdfData?.displayAsPackage ? "Show badge" : "No badge"}</p>
-              <p><span className="text-[#5d5e61]">Notes:</span> {pdfData?.notes || version?.notes || "-"}</p>
-              <p><span className="text-[#5d5e61]">Terms:</span> {pdfData?.termsAndConditions || version?.terms_and_conditions || "-"}</p>
-            </div>
-          </Panel>
+       
         </div>
+        
       </div>
     </div>
   );

@@ -21,7 +21,7 @@ export default function QuotationDetailPage() {
         eyebrow=" "
         title={quotation?.quote_code || "Quotation"}
         description="Quotation summary with linked versions."
-        action={quotation?.event_id ? <Link href={`/events/${quotation.event_id}/quotation`} className="editorial-button-secondary px-5 py-3 text-sm font-semibold uppercase tracking-[0.12rem]">Open Builder</Link> : null}
+        action={quotation?.event_id ? <Link href={`/events/${quotation.event_id}/quotation`} className="editorial-button-secondary px-5 py-3 text-sm font-semibold uppercase tracking-[0.12rem]">Edit quotations </Link> : null}
       />
 
       <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">

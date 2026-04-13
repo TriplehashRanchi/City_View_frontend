@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export function PageIntro({ eyebrow, title, description, action }) {
   return (
@@ -24,7 +25,7 @@ export function Panel({ title, subtitle, children, aside, className = "" }) {
     <section className={`editorial-panel p-6 md:p-8 ${className}`}>
       {title || subtitle || aside ? (
         <div className="mb-6 grid gap-4 lg:grid-cols-[1fr_auto] lg:items-start">
-          <div className="space-y-1">
+          <div className="">
             {title ? <h2 className="display-font text-2xl text-[#2f3331]">{title}</h2> : null}
             {subtitle ? <p className="text-sm leading-7 text-[#5f6662]">{subtitle}</p> : null}
           </div>
@@ -79,7 +80,7 @@ export function PrimaryButton({ children, className = "", ...props }) {
   return (
     <button
       {...props}
-      className={`editorial-button px-5 py-3 text-sm font-semibold uppercase tracking-[0.12rem] transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+      className={`editorial-button cursor-pointer px-5 py-3 text-sm font-semibold uppercase tracking-[0.12rem] transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
     >
       {children}
     </button>
@@ -90,7 +91,7 @@ export function SecondaryButton({ children, className = "", ...props }) {
   return (
     <button
       {...props}
-      className={`editorial-button-secondary px-5 py-3 text-sm font-semibold uppercase tracking-[0.12rem] transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+      className={`editorial-button-secondary cursor-pointer px-5 py-3 text-sm font-semibold uppercase tracking-[0.12rem] transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
     >
       {children}
     </button>
@@ -162,14 +163,14 @@ export function LoadingState({ label = "Loading...", className = "" }) {
     <div className={`flex items-center justify-center py-16 ${className}`}>
       <div className="text-center">
         <Image
-          src="/loding.png"
+          src="/loading.png"
           alt={label}
           width={64}
           height={64}
           className="mx-auto h-16 w-16 object-contain opacity-80"
           priority
         />
-        <p className="mt-4 text-sm uppercase tracking-[0.16rem] text-[#5d5e61]">{label}</p>
+        <p className="mt-4 text-sm  tracking-[0.16rem] text-[#5d5e61]">{label}</p>
       </div>
     </div>
   );
@@ -181,5 +182,83 @@ export function LoadingInline({ label = "Loading..." }) {
       <Image src="/loding.png" alt="" width={18} height={18} className="h-[18px] w-[18px] object-contain" aria-hidden="true" />
       <span>{label}</span>
     </span>
+  );
+}
+
+export function PaginationControls({
+  currentPage,
+  totalPages,
+  totalItems,
+  pageSize,
+  onPageChange,
+}) {
+  if (totalItems <= pageSize) return null;
+
+  const startItem = (currentPage - 1) * pageSize + 1;
+  const endItem = Math.min(currentPage * pageSize, totalItems);
+  const pageNumbers = [];
+
+  for (let page = 1; page <= totalPages; page += 1) {
+    if (
+      page === 1 ||
+      page === totalPages ||
+      Math.abs(page - currentPage) <= 1
+    ) {
+      pageNumbers.push(page);
+    } else if (pageNumbers[pageNumbers.length - 1] !== "...") {
+      pageNumbers.push("...");
+    }
+  }
+
+  return (
+    <div className="mt-6 flex flex-col gap-4 border-t border-[var(--outline-ghost)] pt-5 md:flex-row md:items-center md:justify-between">
+      <p className="text-sm text-[#5f6662]">
+        Showing {startItem}-{endItem} of {totalItems}
+      </p>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="editorial-button-secondary inline-flex items-center cursor-pointer justify-center rounded-sm px-3 py-3 text-xs font-semibold uppercase tracking-[0.12rem] disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <ChevronLeft size={16} />
+        </button>
+
+        {pageNumbers.map((page, index) =>
+          page === "..." ? (
+            <span
+              key={`ellipsis-${index}`}
+              className="px-2 text-sm text-[#7d817d] font-semibold"
+            >
+              ...
+            </span>
+          ) : (
+            <button
+              key={page}
+              type="button"
+              onClick={() => onPageChange(page)}
+              className={`min-w-10 rounded-sm px-3 py-2 cursor-pointer text-sm font-semibold transition ${
+                currentPage === page
+                  ? "bg-[#2f3331] text-[#faf9f7]"
+                  : "  text-[#2f3331] hover:bg-[#ece9e2]"
+              }`}
+            >
+              {page}
+            </button>
+          ),
+        )}
+
+        <button
+          type="button"
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="editorial-button-secondary inline-flex cursor-pointer items-center justify-center rounded-sm px-3 py-3 text-xs font-semibold uppercase tracking-[0.12rem] disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <ChevronRight size={16} />
+        </button>
+      </div>
+    </div>
   );
 }

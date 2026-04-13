@@ -340,8 +340,8 @@ export default function QuotationBuilder({ eventId }) {
 
       <MessageBanner tone="danger" message={error} />
 
-      <div className="grid gap-8 xl:grid-cols-[1.05fr_1.2fr_0.85fr]">
-        <div className="space-y-8">
+      <div className="grid gap-4 xl:grid-cols-[1.15fr_1.05fr_1.05fr]">
+        <div className="space-y-4">
           <Panel title="Event Summary" subtitle="Client and event context for this quotation.">
             <div className="grid gap-5">
               <div>
@@ -395,7 +395,7 @@ export default function QuotationBuilder({ eventId }) {
                 </Select>
               </div>
 
-              <div className="editorial-muted max-h-[520px] overflow-y-auto p-3">
+              <div className="editorial-muted max-h-[520px] overflow-y-auto p-3 hide-scrollbar">
                 <div className="space-y-2">
                   {products.map((product) => {
                     const included = includedProductIds.includes(String(product.id));
@@ -423,7 +423,7 @@ export default function QuotationBuilder({ eventId }) {
           </Panel>
         </div>
 
-        <div className="space-y-8">
+        <div className="space-y-4">
           <Panel title="Selected Items" subtitle="One flat item list. No package block, no line pricing.">
             <div className="space-y-4">
               {state.sourcePackageId ? (
@@ -501,7 +501,7 @@ export default function QuotationBuilder({ eventId }) {
           </Panel>
         </div>
 
-        <div className="space-y-8">
+        <div className="space-y-4">
           <Panel title="Pricing" subtitle="Preview only. Backend remains source of truth.">
             <div className="space-y-5">
               <Field label="Per Person Price">

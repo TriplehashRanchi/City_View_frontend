@@ -119,7 +119,7 @@ export default function EventForm({ eventId = null }) {
       <PageIntro
         eyebrow=" "
         title={eventId ? "Edit Event" : "New Event"}
-        description="Events belong to a client and become the container for one quotation record and its versions."
+        description=" "
       />
 
       <Panel>

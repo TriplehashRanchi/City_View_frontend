@@ -1,83 +1,343 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { PageIntro, Panel, PrimaryButton } from "@/components/AdminUI";
+import { useEffect, useMemo, useState } from "react";
+import {
+  LoadingState,
+  PaginationControls,
+  PageIntro,
+  Panel,
+  PrimaryButton,
+} from "@/components/AdminUI";
 import { eventsApi } from "@/services/events";
 import { quotationsApi } from "@/services/quotations";
-import { formatCurrency, formatDate, titleize, unwrapListResponse } from "@/services/normalizers";
-import { Plus } from "lucide-react";
+import {
+  formatCurrency,
+  formatDate,
+  titleize,
+  unwrapListResponse,
+} from "@/services/normalizers";
+import {
+  ArrowUpRight,
+  CalendarDays,
+  CheckCircle2,
+  ChevronDown,
+  Clock3,
+  FileText,
+  Plus,
+  Search,
+} from "lucide-react";
+
+const statusStyles = {
+  draft: "bg-[#eee7d7] text-[#6f5d33]",
+  sent: "bg-[#e5edf4] text-[#35546b]",
+  approved: "bg-[#e4ece6] text-[#34523f]",
+  accepted: "bg-[#e4ece6] text-[#34523f]",
+  rejected: "bg-[#f6e8e5] text-[#8b3733]",
+  cancelled: "bg-[#f6e8e5] text-[#8b3733]",
+};
 
 export default function QuotationsPage() {
   const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 6;
 
   useEffect(() => {
     const load = async () => {
+      setLoading(true);
+
       const events = unwrapListResponse(await eventsApi.list().catch(() => []));
       const allRows = [];
 
       for (const event of events) {
         try {
-          const quotations = unwrapListResponse(await quotationsApi.listQuotationsByEvent(event.id));
+          const quotations = unwrapListResponse(
+            await quotationsApi.listQuotationsByEvent(event.id),
+          );
+
           for (const quotation of quotations) {
-            const detail = await quotationsApi.getQuotation(quotation.id).catch(() => quotation);
+            const detail = await quotationsApi
+              .getQuotation(quotation.id)
+              .catch(() => quotation);
             const entity = detail?.data || detail;
-            const latestVersion = entity?.versions?.[0] || entity?.latestVersion || null;
+            const latestVersion =
+              entity?.versions?.[0] || entity?.latestVersion || null;
 
             allRows.push({
               id: quotation.id,
-              quoteCode: entity?.quote_code || quotation.quote_code || `Q-${quotation.id}`,
+              quoteCode:
+                entity?.quote_code ||
+                quotation.quote_code ||
+                `Q-${quotation.id}`,
               clientName: entity?.client_name || event.client_name || "-",
               occasionType: entity?.occasion_type || event.occasion_type || "-",
               eventDate: entity?.event_date || event.event_date || "-",
-              status: latestVersion?.status || entity?.current_status || quotation?.status || "draft",
-              totalVersions: entity?.versions?.length || quotation?.total_versions || 0,
-              finalAmount: latestVersion?.final_amount || quotation?.final_amount || 0,
+              status:
+                latestVersion?.status ||
+                entity?.current_status ||
+                quotation?.status ||
+                "draft",
+              totalVersions:
+                entity?.versions?.length || quotation?.total_versions || 0,
+              finalAmount:
+                latestVersion?.final_amount || quotation?.final_amount || 0,
             });
           }
         } catch {}
       }
 
+      allRows.sort((a, b) => {
+        const left = a.eventDate ? new Date(a.eventDate).getTime() : 0;
+        const right = b.eventDate ? new Date(b.eventDate).getTime() : 0;
+        return right - left;
+      });
+
       setRows(allRows);
+      setLoading(false);
     };
 
     load();
   }, []);
 
+  const totals = useMemo(() => {
+    return rows.reduce(
+      (acc, row) => {
+        const status = (row.status || "").toLowerCase();
+        acc.total += 1;
+        acc.value += Number(row.finalAmount || 0);
+        if (status === "draft") acc.draft += 1;
+        if (status === "approved" || status === "accepted") acc.approved += 1;
+        return acc;
+      },
+      { total: 0, draft: 0, approved: 0, value: 0 },
+    );
+  }, [rows]);
+
+  const filteredRows = useMemo(() => {
+    const query = search.trim().toLowerCase();
+
+    return rows.filter((row) => {
+      const status = (row.status || "").toLowerCase();
+      const matchesStatus = statusFilter === "all" || status === statusFilter;
+      const matchesSearch =
+        !query ||
+        row.quoteCode.toLowerCase().includes(query) ||
+        row.clientName.toLowerCase().includes(query) ||
+        row.occasionType.toLowerCase().includes(query);
+
+      return matchesStatus && matchesSearch;
+    });
+  }, [rows, search, statusFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedRows = useMemo(() => {
+    const start = (safePage - 1) * PAGE_SIZE;
+    return filteredRows.slice(start, start + PAGE_SIZE);
+  }, [filteredRows, safePage, PAGE_SIZE]);
+
   return (
-    <div className="mx-auto max-w-7xl space-y-8">
+    <div className="mx-auto max-w-7xl space-y-8 pt-2">
       <PageIntro
-        eyebrow=" "
+        eyebrow=""
         title="Quotation Registry"
-        description="This view is a registry over quotation records. The authoring workspace still lives under each event."
+        description="Review current quotation activity, check value at a glance, and open the right record quickly."
         action={
           <Link href="/quotations/new">
-            <PrimaryButton className="flex justify-center items-center gap-2">
-              {" "}
-              <Plus />
+            <PrimaryButton className="flex items-center justify-center gap-2">
+              <Plus size={18} />
               Create Quotation
             </PrimaryButton>
           </Link>
         }
       />
 
-      <Panel title="All Quotations">
-        <div className="grid gap-3">
-          {rows.length ? rows.map((row) => (
-            <Link key={row.id} href={`/quotations/${row.id}`} className="editorial-panel grid gap-3 p-5 md:grid-cols-[1.2fr_1fr_160px_140px] md:items-center">
-              <div>
-                <p className="display-font text-2xl text-[#2f3331]">{row.quoteCode}</p>
-                <p className="mt-1 text-sm text-[#5f6662]">{row.clientName} / {row.occasionType}</p>
-              </div>
-              <div className="text-sm text-[#2f3331]">{formatDate(row.eventDate)}</div>
-              <div className="text-sm uppercase tracking-[0.12rem] text-[#7b6540]">{titleize(row.status)}</div>
-              <div className="text-right">
-                <p className="text-sm text-[#5d5e61]">v{row.totalVersions}</p>
-                <p className="font-semibold text-[#2f3331]">{formatCurrency(row.finalAmount)}</p>
-              </div>
-            </Link>
-          )) : <div className="editorial-muted px-4 py-10 text-center text-sm text-[#5f6662]">No quotations available yet.</div>}
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <article className="editorial-panel p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18rem] text-[#7b6540]">
+                Total Quotations
+              </p>
+              <p className="display-font mt-3 text-4xl leading-none text-[#2f3331]">
+                {totals.total}
+              </p>
+            </div>
+            <div className="rounded-full bg-[#ece9e2] p-3 text-[#7b6540]">
+              <FileText size={20} />
+            </div>
+          </div>
+        </article>
+
+        <article className="editorial-panel p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18rem] text-[#7b6540]">
+                Draft Quotations
+              </p>
+              <p className="display-font mt-3 text-4xl leading-none text-[#2f3331]">
+                {totals.draft}
+              </p>
+            </div>
+            <div className="rounded-full bg-[#f1ead9] p-3 text-[#7b6540]">
+              <Clock3 size={20} />
+            </div>
+          </div>
+        </article>
+
+        <article className="editorial-panel p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18rem] text-[#7b6540]">
+                Approved
+              </p>
+              <p className="display-font mt-3 text-4xl leading-none text-[#2f3331]">
+                {totals.approved}
+              </p>
+            </div>
+            <div className="rounded-full bg-[#e4ece6] p-3 text-[#34523f]">
+              <CheckCircle2 size={20} />
+            </div>
+          </div>
+        </article>
+
+        <article className="editorial-panel p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18rem] text-[#7b6540]">
+                Quoted Value
+              </p>
+              <p className="display-font mt-3 text-3xl leading-none text-[#2f3331]">
+                {formatCurrency(totals.value)}
+              </p>
+            </div>
+            <div className="rounded-full bg-[#ece9e2] p-3 text-[#5d5e61]">
+              <CalendarDays size={20} />
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <Panel
+        title="All Quotations"
+        subtitle="Search by quotation code, client, or occasion. Filter by status when you need a narrower list."
+      >
+        <div className="mb-6 grid gap-4 lg:grid-cols-[1fr_220px]">
+          <label className="editorial-muted flex items-center gap-3 px-4 py-3 ">
+            <Search size={18} className="text-[#7b6540]" />
+            <input
+              value={search}
+              onChange={(event) => {
+                setSearch(event.target.value);
+                setCurrentPage(1);
+              }}
+              placeholder="Search quotation, client, or occasion"
+              className="w-200 bg-transparent text-sm text-[#2f3331] outline-none placeholder:text-[#7d817d]"
+            />
+          </label>
+
+          <div className="relative">
+            <select
+              value={statusFilter}
+              onChange={(event) => {
+                setStatusFilter(event.target.value);
+                setCurrentPage(1);
+              }}
+              className="h-full w-full appearance-none   editorial-muted px-4 py-3 pr-11 text-sm font-medium text-[#2f3331] outline-none   "
+            >
+              <option value="all">All Statuses</option>
+              <option value="draft">Draft</option>
+              <option value="sent">Sent</option>
+              <option value="approved">Approved</option>
+              <option value="accepted">Accepted</option>
+              <option value="rejected">Rejected</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+            <ChevronDown
+              size={18}
+              className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#7b6540]"
+            />
+          </div>
         </div>
+
+        {loading ? (
+          <LoadingState label="Loading quotations..." className="py-10" />
+        ) : filteredRows.length ? (
+          <>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {paginatedRows.map((row) => {
+              const tone =
+                statusStyles[(row.status || "").toLowerCase()] ||
+                "bg-[#ece9e2] text-[#5d5e61]";
+
+              return (
+                <Link
+                  key={row.id}
+                  href={`/quotations/${row.id}`}
+                  className="group flex min-h-[190px] flex-col justify-between rounded-md border border-[rgba(93,94,97,0.12)] bg-[#fbfaf7] p-4  "
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0">
+                        <p className="display-font truncate text-[1.45rem] leading-tight text-[#2f3331]">
+                          {row.quoteCode}
+                        </p>
+                        <p className="mt-1 truncate text-sm text-[#5f6662]">
+                          {row.clientName}
+                        </p>
+                        <p className="mt-0.5 text-sm text-[#7a7f7b]">
+                          {row.occasionType}
+                        </p>
+                      </div>
+                      <span
+                        className={`inline-flex shrink-0 items-center rounded-sm border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14rem] ${tone}`}
+                      >
+                        {titleize(row.status)}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <span className=" flex items-center gap-2 rounded-sm border border-[#ddcfb2] bg-[#f5ede0] px-3 py-1 text-xs font-medium text-[#7b6540]">
+                        <CalendarDays size={14} className="text-[#7b6540]" />
+                        Event: {formatDate(row.eventDate)}
+                      </span>
+                      <span className="rounded-sm border border-[#d7d9d4] bg-[#f2f3ef] px-3 py-1 text-xs font-medium text-[#5d5e61]">
+                        Version {row.totalVersions}
+                      </span>
+                    </div>
+
+                  </div>
+
+                  <div className="mt-3 flex items-center justify-between gap-4 border-t border-[rgba(93,94,97,0.08)] pt-3">
+                    <p className="text-sm font-semibold text-[#2f3331]">
+                      Quoted Amount: {formatCurrency(row.finalAmount)}
+                    </p>
+
+                    <div className="inline-flex items-center gap-2 rounded-sm bg-[#7b6540] px-3.5 py-2 text-sm font-semibold text-[#faf9f7]  ">
+                      <span>Open Quote</span>
+                      <ArrowUpRight size={16} />
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+          <PaginationControls
+            currentPage={safePage}
+            totalPages={totalPages}
+            totalItems={filteredRows.length}
+            pageSize={PAGE_SIZE}
+            onPageChange={setCurrentPage}
+          />
+          </>
+        ) : (
+          <div className="editorial-muted px-4 py-12 text-center text-sm leading-7 text-[#5f6662]">
+            No quotations match your current search or filter.
+          </div>
+        )}
       </Panel>
     </div>
   );

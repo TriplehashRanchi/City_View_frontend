@@ -187,7 +187,7 @@ export default function PackageForm({ packageId = null }) {
       <PageIntro
         eyebrow=" "
         title={packageId ? "Edit Package" : "New Package"}
-        description="Packages are shortcuts over products. They only persist name, price, status, description, and ordered product references."
+        description=" "
       />
 
       <Panel>
@@ -232,7 +232,7 @@ export default function PackageForm({ packageId = null }) {
                     </Select>
                   </div>
                 </div>
-                <div className="editorial-muted max-h-[480px] overflow-y-auto p-3">
+                <div className="editorial-muted max-h-[480px] overflow-y-auto p-3 hide-scrollbar">
                   <div className="space-y-2">
                     {catalogProducts.map((product) => (
                       <div key={product.id} className="editorial-panel flex items-start justify-between gap-4 p-4">

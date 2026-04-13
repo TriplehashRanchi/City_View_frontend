@@ -39,7 +39,11 @@ body {
   min-height: 100vh;
   background:
     linear-gradient(180deg, rgba(93, 94, 97, 0.03), transparent 28%),
-    radial-gradient(circle at top left, rgba(159, 131, 82, 0.08), transparent 26%),
+    radial-gradient(
+      circle at top left,
+      rgba(159, 131, 82, 0.08),
+      transparent 26%
+    ),
     var(--surface);
   color: var(--foreground);
   font-family: "Inter", "Segoe UI", sans-serif;
@@ -80,7 +84,7 @@ textarea {
 }
 
 .editorial-button {
-  background: linear-gradient(135deg, var(--primary), var(--primary-dim));
+  background: #7b6540;
   color: #f8f7f4;
 }
 
@@ -98,7 +102,9 @@ textarea {
   background: var(--surface-container-high);
   color: var(--foreground);
   outline: none;
-  transition: background-color 200ms ease-out, box-shadow 200ms ease-out;
+  transition:
+    background-color 200ms ease-out,
+    box-shadow 200ms ease-out;
 }
 
 .editorial-input:focus,
@@ -138,4 +144,14 @@ textarea {
   to {
     transform: scaleX(0);
   }
+}
+
+/* Hide scrollbar but keep scroll */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE & Edge */
+  scrollbar-width: none;     /* Firefox */
 }

@@ -124,7 +124,7 @@ export default function ProductForm({ productId = null }) {
       <PageIntro
         eyebrow=" "
         title={productId ? "Edit Product" : "New Product"}
-        description="Products are linked to category records now. Choose a category id from the catalog instead of storing category text on the product."
+        description=""
       />
 
       <Panel>

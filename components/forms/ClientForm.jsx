@@ -102,7 +102,7 @@ export default function ClientForm({ clientId = null }) {
       <PageIntro
         eyebrow=" "
         title={clientId ? "Edit Client" : "New Client"}
-        description="Clients remain separate from events. Keep contact details flat and event-agnostic."
+        description=" "
       />
 
       <Panel>
