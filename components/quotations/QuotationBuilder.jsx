@@ -333,7 +333,7 @@ export default function QuotationBuilder({ eventId }) {
   return (
     <div className="mx-auto max-w-[1600px] space-y-8">
       <PageIntro
-        eyebrow="Quotation Workspace"
+        eyebrow=" "
         title="Build Quotation Version"
         description="Use one flat selected-item list. Packages only prefill items; the backend decides whether the final version still renders as a package."
       />

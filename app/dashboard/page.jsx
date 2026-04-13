@@ -64,7 +64,7 @@ export default function DashboardPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-8">
       <PageIntro
-        eyebrow="Dashboard"
+        eyebrow=""
         title="Operational Overview"
         description="The dashboard is thin by design. It shows counts from the new core model and a short view of active event work."
       />

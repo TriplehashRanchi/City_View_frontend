@@ -59,7 +59,7 @@ export default function QuotationVersionDetailPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-8">
       <PageIntro
-        eyebrow="Quotation Versions"
+        eyebrow=" "
         title={`${version?.quote_code || "Quotation"} / V${version?.version_number || "-"}`}
         description="Version detail, item list, pricing summary, and PDF-facing data."
       />

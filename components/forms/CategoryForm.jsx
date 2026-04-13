@@ -86,7 +86,7 @@ export default function CategoryForm({ categoryId = null }) {
   return (
     <div className="mx-auto max-w-4xl space-y-8">
       <PageIntro
-        eyebrow="Categories"
+        eyebrow=" "
         title={categoryId ? "Edit Category" : "New Category"}
         description="Categories are first-class records. Products reference them by `categoryId`."
       />

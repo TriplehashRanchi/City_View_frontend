@@ -122,7 +122,7 @@ export default function ProductForm({ productId = null }) {
   return (
     <div className="mx-auto max-w-4xl space-y-8">
       <PageIntro
-        eyebrow="Products"
+        eyebrow=" "
         title={productId ? "Edit Product" : "New Product"}
         description="Products are linked to category records now. Choose a category id from the catalog instead of storing category text on the product."
       />

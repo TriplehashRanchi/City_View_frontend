@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
@@ -77,9 +78,16 @@ export default function AdminShell({ children }) {
 
   if (checkingAuth) {
     return (
-      <main className="grid min-h-screen place-items-center bg-[#faf9f7] px-6">
-        <div className="editorial-panel px-8 py-6 text-sm uppercase tracking-[0.18rem] text-[#5d5e61]">
-          Verifying admin session
+      <main className="grid min-h-screen place-items-center   px-6">
+        <div className="  px-10 py-8">
+          <Image
+            src="/loading.png"
+            alt="Verifying admin session"
+            width={120}
+            height={120}
+            priority
+            className="h-24 w-24 object-contain md:h-32 md:w-32"
+          />
         </div>
       </main>
     );
@@ -93,7 +101,10 @@ export default function AdminShell({ children }) {
 
   return (
     <div className="min-h-screen bg-[#faf9f7]">
-      <Sidebar isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
+      <Sidebar
+        isOpen={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+      />
       <div className="md:pl-[280px]">
         <TopNavbar onMenuClick={() => setMobileMenuOpen(true)} />
         <main className="px-4 pb-10 pt-6 md:px-10">{children}</main>

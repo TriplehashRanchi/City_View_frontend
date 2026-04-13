@@ -18,7 +18,7 @@ export default function QuotationDetailPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-8">
       <PageIntro
-        eyebrow="Quotations"
+        eyebrow=" "
         title={quotation?.quote_code || "Quotation"}
         description="Quotation summary with linked versions."
         action={quotation?.event_id ? <Link href={`/events/${quotation.event_id}/quotation`} className="editorial-button-secondary px-5 py-3 text-sm font-semibold uppercase tracking-[0.12rem]">Open Builder</Link> : null}

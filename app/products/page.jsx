@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { DataTable, PageIntro, Panel, PrimaryButton, TextInput } from "@/components/AdminUI";
 import { productsApi } from "@/services/products";
 import { formatCurrency, titleize, unwrapListResponse } from "@/services/normalizers";
+import { Plus } from "lucide-react";
 
 export default function ProductsPage() {
   const [products, setProducts] = useState([]);
@@ -30,12 +31,16 @@ export default function ProductsPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-8">
       <PageIntro
-        eyebrow="Products"
+        eyebrow=" "
         title="Product Registry"
         description="Each product is a flat catalog record with base price, category, food type, and status."
         action={
           <Link href="/products/new">
-            <PrimaryButton>Add Product</PrimaryButton>
+            <PrimaryButton className="flex justify-center items-center gap-2">
+              {" "}
+              <Plus />
+              Add Product
+            </PrimaryButton>
           </Link>
         }
       />

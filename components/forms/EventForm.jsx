@@ -117,7 +117,7 @@ export default function EventForm({ eventId = null }) {
   return (
     <div className="mx-auto max-w-4xl space-y-8">
       <PageIntro
-        eyebrow="Events"
+        eyebrow=" "
         title={eventId ? "Edit Event" : "New Event"}
         description="Events belong to a client and become the container for one quotation record and its versions."
       />

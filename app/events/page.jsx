@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { DataTable, PageIntro, Panel, PrimaryButton, TextInput } from "@/components/AdminUI";
 import { eventsApi } from "@/services/events";
 import { formatDate, titleize, unwrapListResponse } from "@/services/normalizers";
+import { Plus } from "lucide-react";
 
 export default function EventsPage() {
   const [events, setEvents] = useState([]);
@@ -29,12 +30,16 @@ export default function EventsPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-8">
       <PageIntro
-        eyebrow="Events"
+        eyebrow=" "
         title="Event Registry"
         description="Events hold client context and quotation lifecycle. `quotation_created` replaces the old quoted status."
         action={
           <Link href="/events/new">
-            <PrimaryButton>Add Event</PrimaryButton>
+            <PrimaryButton className="flex justify-center items-center gap-2">
+              {" "}
+              <Plus />
+              Add Event
+            </PrimaryButton>
           </Link>
         }
       />

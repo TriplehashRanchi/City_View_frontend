@@ -28,7 +28,7 @@ export default function ClientDetailPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-8">
       <PageIntro
-        eyebrow="Clients"
+        eyebrow=" "
         title={client?.name || "Client"}
         description="Client record with linked event history."
         action={<Link href={`/clients/${params.id}/edit`} className="editorial-button-secondary px-5 py-3 text-sm font-semibold uppercase tracking-[0.12rem]">Edit Client</Link>}

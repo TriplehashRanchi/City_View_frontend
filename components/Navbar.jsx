@@ -27,7 +27,7 @@ export default function TopNavbar({ onMenuClick = () => {} }) {
   };
 
   return (
-    <header className="glass-nav sticky top-0 z-20 px-4 py-4 md:px-10">
+    <header className="  sticky top-0 z-20 px-4 py-4 md:px-10 bg-[#f3f4f1]">
       <div className="grid gap-4 md:grid-cols-[auto_1fr_auto] md:items-center">
         <button
           type="button"
@@ -38,8 +38,7 @@ export default function TopNavbar({ onMenuClick = () => {} }) {
         </button>
 
         <div className="space-y-1">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22rem] text-[#7b6540]">Workspace</p>
-          <h2 className="display-font text-2xl text-[#2f3331]">{labels[segment] || "Admin"}</h2>
+           <h2 className="display-font text-2xl text-[#2f3331]">{labels[segment] || "Admin"}</h2>
         </div>
 
         <div className="flex items-center gap-3 md:justify-end">

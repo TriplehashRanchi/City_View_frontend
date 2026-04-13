@@ -6,6 +6,7 @@ import { PageIntro, Panel, PrimaryButton } from "@/components/AdminUI";
 import { eventsApi } from "@/services/events";
 import { quotationsApi } from "@/services/quotations";
 import { formatCurrency, formatDate, titleize, unwrapListResponse } from "@/services/normalizers";
+import { Plus } from "lucide-react";
 
 export default function QuotationsPage() {
   const [rows, setRows] = useState([]);
@@ -46,12 +47,16 @@ export default function QuotationsPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-8">
       <PageIntro
-        eyebrow="Quotations"
+        eyebrow=" "
         title="Quotation Registry"
         description="This view is a registry over quotation records. The authoring workspace still lives under each event."
         action={
           <Link href="/quotations/new">
-            <PrimaryButton>Create Quotation</PrimaryButton>
+            <PrimaryButton className="flex justify-center items-center gap-2">
+              {" "}
+              <Plus />
+              Create Quotation
+            </PrimaryButton>
           </Link>
         }
       />

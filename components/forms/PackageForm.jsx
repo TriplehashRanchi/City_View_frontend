@@ -185,7 +185,7 @@ export default function PackageForm({ packageId = null }) {
   return (
     <div className="mx-auto max-w-6xl space-y-8">
       <PageIntro
-        eyebrow="Packages"
+        eyebrow=" "
         title={packageId ? "Edit Package" : "New Package"}
         description="Packages are shortcuts over products. They only persist name, price, status, description, and ordered product references."
       />

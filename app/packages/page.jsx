@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { DataTable, PageIntro, Panel, PrimaryButton, TextInput } from "@/components/AdminUI";
 import { packagesApi } from "@/services/packages";
 import { formatCurrency, titleize, unwrapListResponse } from "@/services/normalizers";
+import { Plus } from "lucide-react";
 
 export default function PackagesPage() {
   const [packages, setPackages] = useState([]);
@@ -25,12 +26,16 @@ export default function PackagesPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-8">
       <PageIntro
-        eyebrow="Packages"
+        eyebrow=" "
         title="Package Registry"
         description="Packages are curated product shortcuts. They only matter as reusable item-fillers for quotation versions."
         action={
           <Link href="/packages/new">
-            <PrimaryButton>Add Package</PrimaryButton>
+            <PrimaryButton className="flex justify-center items-center gap-2">
+              {" "}
+              <Plus />
+              Add Package
+            </PrimaryButton>
           </Link>
         }
       />

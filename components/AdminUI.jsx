@@ -9,9 +9,9 @@ export function PageIntro({ eyebrow, title, description, action }) {
         {eyebrow ? (
           <p className="text-[11px] font-semibold uppercase tracking-[0.28rem] text-[#7b6540]">{eyebrow}</p>
         ) : null}
-        <div className="space-y-2">
-          <h1 className="display-font text-4xl leading-none text-[#2f3331] md:text-5xl">{title}</h1>
-          {description ? <p className="max-w-3xl text-sm leading-7 text-[#5f6662]">{description}</p> : null}
+        <div className="space-y-1">
+          <h1 className="display-font text-4xl leading-none text-[#2f3331] md:text-4xl">{title}</h1>
+          {description ? <p className="max-w-4xl text-md leading-7 text-[#5f6662]">{description}</p> : null}
         </div>
       </div>
       {action ? <div>{action}</div> : null}

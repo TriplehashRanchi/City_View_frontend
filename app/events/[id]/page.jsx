@@ -28,7 +28,7 @@ export default function EventDetailPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-8">
       <PageIntro
-        eyebrow="Events"
+        eyebrow=" "
         title={event?.occasion_type || "Event"}
         description="Event details with linked quotation record."
         action={<Link href={`/events/${params.id}/edit`} className="editorial-button-secondary px-5 py-3 text-sm font-semibold uppercase tracking-[0.12rem]">Edit Event</Link>}
