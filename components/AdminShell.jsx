@@ -11,6 +11,7 @@ export default function AdminShell({ children }) {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -104,9 +105,17 @@ export default function AdminShell({ children }) {
       <Sidebar
         isOpen={mobileMenuOpen}
         onClose={() => setMobileMenuOpen(false)}
+        isCollapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed((current) => !current)}
       />
-      <div className="md:pl-[280px]">
-        <TopNavbar onMenuClick={() => setMobileMenuOpen(true)} />
+      <div
+        className={`transition-[padding] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+          sidebarCollapsed ? "md:pl-[80px]" : "md:pl-[280px]"
+        }`}
+      >
+        <TopNavbar
+          onMenuClick={() => setMobileMenuOpen(true)}
+        />
         <main className="px-4 pb-10 pt-6 md:px-10">{children}</main>
       </div>
     </div>

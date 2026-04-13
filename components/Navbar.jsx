@@ -1,31 +1,11 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
 import { auth } from "@/services/auth";
-import { LogOut } from "lucide-react";
 
-const labels = {
-  dashboard: "Dashboard",
-  categories: "Categories",
-  products: "Products",
-  packages: "Packages",
-  clients: "Clients",
-  events: "Events",
-  quotations: "Quotations",
-  "quotation-versions": "Quotation Versions",
-  login: "Login",
-};
-
-export default function TopNavbar({ onMenuClick = () => {} }) {
-  const pathname = usePathname();
-  const router = useRouter();
-  const segment = pathname.split("/")[1] || "dashboard";
+export default function TopNavbar({
+  onMenuClick = () => {},
+}) {
   const admin = auth.getAdmin();
-
-  const logout = () => {
-    auth.clearSession();
-    router.replace("/login");
-  };
 
   return (
     <header className="sticky top-0 z-20 border-b border-[#e1e0df] bg-[#f3f4f1] px-4 py-2.5 md:px-10">
@@ -37,7 +17,7 @@ export default function TopNavbar({ onMenuClick = () => {} }) {
         >
           Menu
         </button>
-        <div></div>
+        <div />
 
         <div className="space-y-1  flex items-center justify-end gap-2 pr-5">
           <div className="bg-black rounded-full text-white font-bold p-2 w-10 h-10 flex justify-center items-center">

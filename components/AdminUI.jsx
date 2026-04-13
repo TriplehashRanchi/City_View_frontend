@@ -70,7 +70,7 @@ export function TextArea({ className = "", ...props }) {
 
 export function Select({ className = "", children, ...props }) {
   return (
-    <select {...props} className={`editorial-select px-4 py-3 text-sm ${className}`}>
+    <select {...props} className={`editorial-select  px-4 py-3 text-sm ${className}`}>
       {children}
     </select>
   );

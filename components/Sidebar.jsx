@@ -5,6 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   Box,
   CalendarDays,
+  ChevronsLeft,
+  ChevronsRight,
   FileText,
   LayoutDashboard,
   LogOut,
@@ -29,7 +31,12 @@ const navigation = [
   },
 ];
 
-export default function Sidebar({ isOpen = false, onClose = () => {} }) {
+export default function Sidebar({
+  isOpen = false,
+  onClose = () => {},
+  isCollapsed = false,
+  onToggleCollapse = () => {},
+}) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -46,15 +53,48 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
       />
 
       <aside
-        className={`editorial-muted fixed left-0 top-0 z-40 pb-6 flex h-screen w-[280px] border-r border-[#e1e0df] flex-col transition-transform duration-200 md:translate-x-0 ${
+        className={`editorial-muted fixed left-0 top-0 z-40 flex h-screen border-r border-[#e1e0df] pb-6 flex-col overflow-hidden transition-[width,transform] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] md:translate-x-0 ${
+          isCollapsed ? "w-[80px]" : "w-[280px]"
+        } ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="space-y-2 border-b border-[#e1e0df] px-4 py-4">
-           <h1 className="display-font text-[2rem] leading-none text-[#2f3331] px-2">CityView</h1>
-         </div>
+        <div
+          className={`border-b border-[#e1e0df] transition-[padding,height] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+            isCollapsed ? "  px-3 py-4" : "px-4 py-4"
+          }`}
+        >
+          <div
+            className={`flex items-center ${
+              isCollapsed ? "justify-center" : "justify-between"
+            }`}
+          >
+            <div
+              className={`overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                isCollapsed ? "w-0 opacity-0" : "w-[170px] opacity-100"
+              }`}
+            >
+              <h1 className="display-font px-2 text-[2rem] leading-none text-[#2f3331]">
+                {isCollapsed ? "" : "CityView"}
+              </h1>
+            </div>
+            <button
+              type="button"
+              onClick={onToggleCollapse}
+              className="hidden h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-sm text-[#5d5e61] transition-all duration-300 hover:bg-[#ece9e2] md:inline-flex"
+              aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              {isCollapsed ? <ChevronsRight size={20} /> : <ChevronsLeft size={20} />}
+            </button>
+          </div>
+        </div>
 
-        <nav className="mt-4 flex-1 space-y-10 px-4">
+        <nav
+          className={`mt-4 flex-1 space-y-10 transition-[padding] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+            isCollapsed ? "px-3" : "px-4"
+          }`}
+        >
           {navigation.map((group) => (
             <div key={group.heading} className="space-y-4">
                <div className="space-y-1">
@@ -66,14 +106,25 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
                       key={item.path}
                       href={item.path}
                       onClick={onClose}
-                      className={`flex items-center gap-3 px-4 py-2 text-lg rounded-sm transition ${
+                      title={isCollapsed ? item.label : undefined}
+                      className={`flex items-center rounded-sm transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                        isCollapsed
+                          ? "justify-center px-0 py-3"
+                          : "gap-3 px-4 py-2 text-lg"
+                      } ${
                         active
                           ? "bg-[#ffffff] text-[#2f3331]"
                           : "text-[#5f6662] hover:bg-[#ffffff]/70 hover:text-[#2f3331]"
                       }`}
                     >
-                      <Icon size={18} strokeWidth={1.8} />
-                      <span>{item.label}</span>
+                      <Icon size={18} strokeWidth={1.8} className="shrink-0" />
+                      <span
+                        className={`overflow-hidden whitespace-nowrap transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                          isCollapsed ? "w-0 -translate-x-2 opacity-0" : "w-auto translate-x-0 opacity-100"
+                        }`}
+                      >
+                        {item.label}
+                      </span>
                     </Link>
                   );
                 })}
@@ -86,10 +137,19 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
           <button
             type="button"
             onClick={logout}
-            className="flex w-full cursor-pointer items-center gap-3 bg-[#ECE9E2] hover:bg-[#d9d6ca] px-8 py-3 text-left text-sm uppercase  text-[#404040]    "
+            title={isCollapsed ? "Log Out" : undefined}
+            className={`flex w-full cursor-pointer items-center bg-[#ECE9E2] px-8 py-3 text-left text-sm uppercase text-[#404040] transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-[#d9d6ca] ${
+              isCollapsed ? "justify-center gap-0 px-3" : "gap-3"
+            }`}
           >
-            <LogOut size={18} strokeWidth={2.5}  />
-            <span className=" font-semibold">Log Out</span>
+            <LogOut size={18} strokeWidth={2.5} />
+            <span
+              className={`overflow-hidden whitespace-nowrap font-semibold transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                isCollapsed ? "w-0 -translate-x-2 opacity-0" : "w-auto translate-x-0 opacity-100"
+              }`}
+            >
+              Log Out
+            </span>
           </button>
         </div>
       </aside>
