@@ -4,34 +4,21 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import TopNavbar from "@/components/Navbar";
-import CommandPalette from "@/components/CommandPalette";
 import { auth } from "@/services/auth";
 
 export default function AdminShell({ children }) {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const isPublicRoute = pathname === "/" || pathname === "/login";
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const savedState = window.localStorage.getItem("cityview.sidebarCollapsed");
-    setSidebarCollapsed(savedState === "true");
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    window.localStorage.setItem("cityview.sidebarCollapsed", String(sidebarCollapsed));
-  }, [sidebarCollapsed]);
+  const isPublicRoute = pathname === "/login";
 
   useEffect(() => {
     let active = true;
 
-    const check = async () => {
+    const checkSession = async () => {
       const token = auth.getToken();
 
       if (isPublicRoute) {
@@ -47,15 +34,13 @@ export default function AdminShell({ children }) {
           if (!active) return;
           if (session?.admin) auth.saveAdmin(session.admin);
           setIsAuthenticated(true);
-          setCheckingAuth(false);
-          if (pathname === "/login") {
-            router.replace("/dashboard");
-          }
+          router.replace("/dashboard");
         } catch {
           auth.clearSession();
           if (!active) return;
           setIsAuthenticated(false);
-          setCheckingAuth(false);
+        } finally {
+          if (active) setCheckingAuth(false);
         }
         return;
       }
@@ -83,69 +68,36 @@ export default function AdminShell({ children }) {
       }
     };
 
-    check();
+    checkSession();
 
     return () => {
       active = false;
     };
-  }, [isPublicRoute, pathname, router]);
-
-  useEffect(() => {
-    if (isPublicRoute) return undefined;
-
-    const onKeyDown = (event) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
-        event.preventDefault();
-        setSearchOpen(true);
-      }
-
-      if (event.key === "Escape") {
-        setSearchOpen(false);
-      }
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [isPublicRoute]);
+  }, [isPublicRoute, router]);
 
   if (checkingAuth) {
     return (
-      <main className="grid min-h-screen place-items-center bg-[#FFF7CD] p-6">
-        <div className="rounded-2xl border border-[#FDC3A1]/50 bg-white/90 px-6 py-4 text-sm font-medium text-gray-600 shadow-lg">
-          Verifying admin session...
+      <main className="grid min-h-screen place-items-center bg-[#faf9f7] px-6">
+        <div className="editorial-panel px-8 py-6 text-sm uppercase tracking-[0.18rem] text-[#5d5e61]">
+          Verifying admin session
         </div>
       </main>
     );
   }
 
   if (isPublicRoute) {
-    return <main className="min-h-screen bg-[#FFF7CD]">{children}</main>;
+    return <main className="min-h-screen bg-[#faf9f7]">{children}</main>;
   }
 
   if (!isAuthenticated) return null;
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-white">
-      {/* Warm decorative blurs */}
-      <div className="pointer-events-none absolute -top-48 right-[-120px] h-96 w-96 " />
-      <div className="pointer-events-none absolute bottom-0 left-[-120px] h-80 w-80 " />
-
-      <Sidebar
-        isOpen={mobileMenuOpen}
-        isCollapsed={sidebarCollapsed}
-        onClose={() => setMobileMenuOpen(false)}
-        onToggleCollapse={() => setSidebarCollapsed((current) => !current)}
-      />
-
-      <div className={`transition-[padding] duration-300 ${sidebarCollapsed ? "md:pl-24" : "md:pl-72"}`}>
-        <TopNavbar onMenuClick={() => setMobileMenuOpen(true)} onOpenSearch={() => setSearchOpen(true)} />
-        <main className="relative z-10 p-4 md:p-8">{children}</main>
+    <div className="min-h-screen bg-[#faf9f7]">
+      <Sidebar isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
+      <div className="md:pl-[280px]">
+        <TopNavbar onMenuClick={() => setMobileMenuOpen(true)} />
+        <main className="px-4 pb-10 pt-6 md:px-10">{children}</main>
       </div>
-
-      <CommandPalette open={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>
   );
 }
