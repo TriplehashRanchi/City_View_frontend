@@ -46,15 +46,15 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
       />
 
       <aside
-        className={`editorial-muted fixed left-0 top-0 z-40 flex h-screen w-[280px] flex-col px-6 py-8 transition-transform duration-200 md:translate-x-0 ${
+        className={`editorial-muted fixed left-0 top-0 z-40 flex h-screen w-[280px] border-r border-[#e1e0df] flex-col  py-6 transition-transform duration-200 md:translate-x-0 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="space-y-2">
+        <div className="space-y-2 border-b border-[#e1e0df] px-6 pb-3.5">
            <h1 className="display-font text-3xl leading-none text-[#2f3331] px-2">CityView</h1>
          </div>
 
-        <nav className="mt-8 flex-1 space-y-10">
+        <nav className="mt-8 flex-1 space-y-10 px-6">
           {navigation.map((group) => (
             <div key={group.heading} className="space-y-4">
                <div className="space-y-1">
@@ -82,11 +82,11 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
           ))}
         </nav>
 
-        <div className="space-y-3">
+        <div className="space-y-3 ">
           <button
             type="button"
             onClick={logout}
-            className="flex w-full cursor-pointer items-center gap-3 bg-[#2f3331] px-4 py-3 text-left text-sm uppercase tracking-[0.12rem] text-[#faf9f7]    "
+            className="flex w-full cursor-pointer items-center gap-3 bg-[#2f3331] px-6 py-3 text-left text-sm uppercase tracking-[0.12rem] text-[#faf9f7]    "
           >
             <LogOut size={18} strokeWidth={1.8} />
             <span>Sign Out</span>

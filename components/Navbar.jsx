@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { auth } from "@/services/auth";
+import { LogOut } from "lucide-react";
 
 const labels = {
   dashboard: "Dashboard",
@@ -27,7 +28,7 @@ export default function TopNavbar({ onMenuClick = () => {} }) {
   };
 
   return (
-    <header className="  sticky top-0 z-20 px-4 py-4 md:px-10 bg-[#f3f4f1]">
+    <header className="sticky top-0 z-20 border-b border-[#e1e0df] bg-[#f3f4f1] px-4 py-3 md:px-10">
       <div className="grid gap-4 md:grid-cols-[auto_1fr_auto] md:items-center">
         <button
           type="button"
@@ -36,23 +37,20 @@ export default function TopNavbar({ onMenuClick = () => {} }) {
         >
           Menu
         </button>
+        <div></div>
 
-        <div className="space-y-1">
-           <h2 className="display-font text-2xl text-[#2f3331]">{labels[segment] || "Admin"}</h2>
-        </div>
-
-        <div className="flex items-center gap-3 md:justify-end">
-          <div className="hidden text-right md:block">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14rem] text-[#5d5e61]">Signed In</p>
-            <p className="text-sm text-[#2f3331]">{admin?.name || admin?.email || "Administrator"}</p>
+        <div className="space-y-1  flex items-center justify-end gap-2 pr-5">
+          <div className="bg-black rounded-full text-white font-bold p-2 w-10 h-10 flex justify-center items-center">
+            SA
           </div>
-          <button
-            type="button"
-            onClick={logout}
-            className="editorial-button-secondary px-4 py-3 text-sm uppercase tracking-[0.12rem]"
-          >
-            Exit
-          </button>
+         <div className="hidden text-start md:block">
+  <p className="m-0 text-md text-[#2f3331] leading-tight">
+    {admin?.email || "-"}
+  </p>
+  <p className="m-0 text-[12px] font-semibold text-[#5d5e61] leading-tight">
+    {admin?.name || admin?.email || "Administrator"}
+  </p>
+</div>
         </div>
       </div>
     </header>
