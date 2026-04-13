@@ -8,6 +8,7 @@ import {
   PageIntro,
   Panel,
   PrimaryButton,
+  Select,
 } from "@/components/AdminUI";
 import { eventsApi } from "@/services/events";
 import { quotationsApi } from "@/services/quotations";
@@ -21,7 +22,6 @@ import {
   ArrowUpRight,
   CalendarDays,
   CheckCircle2,
-  ChevronDown,
   Clock3,
   FileText,
   Plus,
@@ -239,14 +239,14 @@ export default function QuotationsPage() {
             />
           </label>
 
-          <div className="relative">
-            <select
+          <div>
+            <Select
               value={statusFilter}
               onChange={(event) => {
                 setStatusFilter(event.target.value);
                 setCurrentPage(1);
               }}
-              className="h-full w-full appearance-none   editorial-muted px-4 py-3 pr-11 text-sm font-medium text-[#2f3331] outline-none   "
+              className="h-full bg-transparent font-medium"
             >
               <option value="all">All Statuses</option>
               <option value="draft">Draft</option>
@@ -255,11 +255,7 @@ export default function QuotationsPage() {
               <option value="accepted">Accepted</option>
               <option value="rejected">Rejected</option>
               <option value="cancelled">Cancelled</option>
-            </select>
-            <ChevronDown
-              size={18}
-              className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#7b6540]"
-            />
+            </Select>
           </div>
         </div>
 

@@ -1,7 +1,8 @@
 "use client";
 
+import { Children, isValidElement, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 
 export function PageIntro({ eyebrow, title, description, action }) {
   return (
@@ -69,10 +70,86 @@ export function TextArea({ className = "", ...props }) {
 }
 
 export function Select({ className = "", children, ...props }) {
+  const { value, onChange, name, disabled = false } = props;
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef(null);
+
+  const options = useMemo(
+    () =>
+      Children.toArray(children)
+        .filter((child) => isValidElement(child) && child.type === "option")
+        .map((child) => ({
+          value: child.props.value ?? "",
+          label: child.props.children,
+          disabled: Boolean(child.props.disabled),
+        })),
+    [children],
+  );
+
+  const selectedOption =
+    options.find((option) => String(option.value) === String(value ?? "")) ||
+    options[0] ||
+    null;
+
+  useEffect(() => {
+    const handlePointerDown = (event) => {
+      if (!rootRef.current?.contains(event.target)) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => document.removeEventListener("mousedown", handlePointerDown);
+  }, []);
+
+  const handleSelect = (nextValue) => {
+    setOpen(false);
+    onChange?.({
+      target: { value: nextValue, name },
+      currentTarget: { value: nextValue, name },
+    });
+  };
+
   return (
-    <select {...props} className={`editorial-select  px-4 py-3 text-sm ${className}`}>
-      {children}
-    </select>
+    <div ref={rootRef} className="relative">
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => setOpen((current) => !current)}
+        className={`editorial-select flex w-full items-center justify-between px-4 py-3 pr-11 text-left text-sm ${className}`}
+      >
+        <span className="truncate">{selectedOption?.label ?? ""}</span>
+      </button>
+      <ChevronDown
+        size={18}
+        className={`pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#7b6540] transition ${open ? "rotate-180" : ""}`}
+      />
+
+      {open ? (
+        <div className="absolute left-0 right-0  z-30 overflow-hidden rounded-sm border border-[rgba(123,101,64,0.18)] bg-[#fffdf7] shadow-[0_18px_30px_rgba(47,51,49,0.08)]">
+          {options.map((option) => {
+            const active =
+              String(option.value) === String(selectedOption?.value ?? "");
+
+            return (
+              <button
+                key={String(option.value)}
+                type="button"
+                disabled={option.disabled}
+                onClick={() => handleSelect(option.value)}
+                className={`block w-full px-4 py-2 text-left text-sm cursor-pointer transition ${
+                  active
+                    ? "bg-[#efe4ca] font-semibold text-[#6f5d33]"
+                    : "text-[#2f3331] hover:bg-[#f7f1e5]"
+                } disabled:cursor-not-allowed disabled:opacity-50`}
+              >
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
+    </div>
   );
 }
 
