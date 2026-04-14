@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
   LoadingState,
+  MessageBanner,
   PaginationControls,
   PageIntro,
   Panel,
@@ -23,10 +24,13 @@ import {
   CalendarDays,
   CheckCircle2,
   Clock3,
+  Download,
   FileText,
+  MessageCircle,
   Plus,
   Search,
 } from "lucide-react";
+import { SiWhatsapp } from "react-icons/si";
 
 const statusStyles = {
   draft: "bg-[#eee7d7] text-[#6f5d33]",
@@ -40,6 +44,8 @@ const statusStyles = {
 export default function QuotationsPage() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [downloadId, setDownloadId] = useState(null);
+  const [downloadError, setDownloadError] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
@@ -80,6 +86,11 @@ export default function QuotationsPage() {
                 entity?.current_status ||
                 quotation?.status ||
                 "draft",
+              latestVersionId:
+                latestVersion?.id ||
+                entity?.latest_version_id ||
+                quotation?.latest_version_id ||
+                null,
               totalVersions:
                 entity?.versions?.length || quotation?.total_versions || 0,
               finalAmount:
@@ -131,6 +142,85 @@ export default function QuotationsPage() {
       return matchesStatus && matchesSearch;
     });
   }, [rows, search, statusFilter]);
+
+  const getQuotationFile = async (row) => {
+    const response = await quotationsApi.downloadQuotation(
+      row.id,
+      row.latestVersionId || undefined,
+    );
+
+    const blob = new Blob([response.data], {
+      type: response.headers["content-type"] || "application/pdf",
+    });
+    const disposition = response.headers["content-disposition"] || "";
+    const match = disposition.match(/filename\*?=(?:UTF-8''|")?([^\";]+)/i);
+    const fallbackName = `${row.quoteCode || `quotation-${row.id}`}.pdf`;
+    const filename = decodeURIComponent(
+      (match?.[1] || fallbackName).replace(/"/g, ""),
+    );
+
+    return { blob, filename };
+  };
+
+  const handleDownload = async (row) => {
+    try {
+      setDownloadError("");
+      setDownloadId(row.id);
+
+      const { blob, filename } = await getQuotationFile(row);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      setDownloadError(
+        error?.response?.data?.message || "Unable to download quotation.",
+      );
+    } finally {
+      setDownloadId(null);
+    }
+  };
+
+  const handleWhatsAppShare = async (row) => {
+    try {
+      setDownloadError("");
+      setDownloadId(row.id);
+
+      const { blob, filename } = await getQuotationFile(row);
+      const file = new File([blob], filename, {
+        type: blob.type || "application/pdf",
+      });
+
+      if (
+        typeof navigator === "undefined" ||
+        !navigator.share ||
+        !navigator.canShare?.({ files: [file] })
+      ) {
+        setDownloadError(
+          "PDF sharing works only in supported mobile apps/browsers with WhatsApp installed.",
+        );
+        return;
+      }
+
+      await navigator.share({
+        title: row.quoteCode,
+        text: `Quotation ${row.quoteCode}`,
+        files: [file],
+      });
+    } catch (error) {
+      if (error?.name === "AbortError") return;
+      setDownloadError(
+        error?.response?.data?.message ||
+          "Unable to share PDF to WhatsApp on this device.",
+      );
+    } finally {
+      setDownloadId(null);
+    }
+  };
 
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
   const safePage = Math.min(currentPage, totalPages);
@@ -225,6 +315,8 @@ export default function QuotationsPage() {
         title="All Quotations"
         subtitle="Search by quotation code, client, or occasion. Filter by status when you need a narrower list."
       >
+        <MessageBanner tone="danger" message={downloadError} />
+
         <div className="mb-6 grid gap-4 lg:grid-cols-[1fr_220px]">
           <label className="editorial-muted flex items-center gap-3 px-4 py-3 ">
             <Search size={18} className="text-[#7b6540]" />
@@ -270,10 +362,9 @@ export default function QuotationsPage() {
                 "bg-[#ece9e2] text-[#5d5e61]";
 
               return (
-                <Link
+                <article
                   key={row.id}
-                  href={`/quotations/${row.id}`}
-                  className="group flex min-h-[190px] flex-col justify-between rounded-md border border-[rgba(93,94,97,0.12)] bg-[#fbfaf7] p-4  "
+                  className="group flex min-h-[190px] flex-col justify-between rounded-md border border-[rgba(93,94,97,0.12)] bg-[#fbfaf7] p-4"
                 >
                   <div className="space-y-3">
                     <div className="flex items-start justify-between gap-4">
@@ -288,11 +379,28 @@ export default function QuotationsPage() {
                           {row.occasionType}
                         </p>
                       </div>
-                      <span
-                        className={`inline-flex shrink-0 items-center rounded-sm border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14rem] ${tone}`}
-                      >
-                        {titleize(row.status)}
-                      </span>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleDownload(row)}
+                          disabled={downloadId === row.id}
+                          className="inline-flex h-9 w-9 items-center justify-center cursor-pointer rounded-sm border border-[#d7d9d4] bg-[#f2f3ef] text-[#5d5e61] transition hover:bg-[#e8ebe4] disabled:cursor-not-allowed disabled:opacity-50"
+                          aria-label={`Download ${row.quoteCode}`}
+                          title="Download quotation"
+                        >
+                          <Download size={16} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleWhatsAppShare(row)}
+                          className="inline-flex h-9 w-9 items-center justify-center cursor-pointer rounded-sm border border-[#b7dcc0] bg-[#e8f6ec] text-[#1f8f46] transition hover:bg-[#daf0e1] disabled:cursor-not-allowed disabled:opacity-50"
+                          aria-label={`Share ${row.quoteCode} on WhatsApp`}
+                          title="Share on WhatsApp"
+                        >
+                          <SiWhatsapp size={16} color="#25D366" />
+                        </button>
+                       
+                      </div>
                     </div>
 
                     <div className="flex flex-wrap gap-2">
@@ -312,12 +420,15 @@ export default function QuotationsPage() {
                       Quoted Amount: {formatCurrency(row.finalAmount)}
                     </p>
 
-                    <div className="inline-flex items-center gap-2 rounded-sm bg-[#7b6540] px-3.5 py-2 text-sm font-semibold text-[#faf9f7]  ">
+                    <Link
+                      href={`/quotations/${row.id}`}
+                      className="editorial-button inline-flex items-center gap-2 rounded-sm px-3.5 py-2 text-sm font-semibold"
+                    >
                       <span>Open Quote</span>
                       <ArrowUpRight size={16} />
-                    </div>
+                    </Link>
                   </div>
-                </Link>
+                </article>
               );
             })}
           </div>

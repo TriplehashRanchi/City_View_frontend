@@ -25,4 +25,10 @@ export const quotationsApi = {
   getQuotationPdfData(versionId) {
     return api.get(`/quotations/versions/${versionId}/pdf-data`).then((response) => response.data);
   },
+  downloadQuotation(id, versionId) {
+    return api.get(`/quotations/${id}/download`, {
+      params: versionId ? { versionId } : undefined,
+      responseType: "blob",
+    });
+  },
 };
