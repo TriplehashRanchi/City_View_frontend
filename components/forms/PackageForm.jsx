@@ -9,6 +9,7 @@ import {
   PageIntro,
   Panel,
   PrimaryButton,
+  SearchableSelect,
   SecondaryButton,
   Select,
   TextArea,
@@ -94,6 +95,14 @@ export default function PackageForm({ packageId = null }) {
   }, [search, categoryFilter, foodTypeFilter]);
 
   const selectedProductIds = useMemo(() => new Set(form.products.map((item) => String(item.productId))), [form.products]);
+  const categoryOptions = useMemo(
+    () =>
+      categories.map((category) => ({
+        value: String(category.id),
+        label: category.name,
+      })),
+    [categories],
+  );
 
   const suggestedPrice = useMemo(() => {
     const selected = form.products
@@ -217,14 +226,13 @@ export default function PackageForm({ packageId = null }) {
                   <p className="text-[11px] font-semibold uppercase tracking-[0.16rem] text-[#5d5e61]">Product Catalog</p>
                   <TextInput value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search products" />
                   <div className="grid gap-3 md:grid-cols-2">
-                    <Select value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)}>
-                      <option value="all">All Categories</option>
-                      {categories.map((category) => (
-                        <option key={category.id} value={category.id}>
-                          {category.name}
-                        </option>
-                      ))}
-                    </Select>
+                    <SearchableSelect
+                      value={categoryFilter}
+                      onChange={(event) => setCategoryFilter(event.target.value)}
+                      options={categoryOptions}
+                      allLabel="All Categories"
+                      placeholder="Search category"
+                    />
                     <Select value={foodTypeFilter} onChange={(event) => setFoodTypeFilter(event.target.value)}>
                       <option value="all">All Food Types</option>
                       <option value="veg">Veg</option>

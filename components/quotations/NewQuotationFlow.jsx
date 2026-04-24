@@ -10,6 +10,7 @@ import {
   PageIntro,
   Panel,
   PrimaryButton,
+  SearchableSelect,
   SecondaryButton,
   Select,
   TextArea,
@@ -266,6 +267,14 @@ export default function NewQuotationFlow() {
     [version.discountType, version.discountValue, subtotal],
   );
   const estimatedFinal = Math.max(subtotal - discountAmount, 0);
+  const categoryOptions = useMemo(
+    () =>
+      categories.map((category) => ({
+        value: String(category.id),
+        label: category.name,
+      })),
+    [categories],
+  );
 
   const suggestedPrice = useMemo(() => {
     if (!selectedProducts.length) return null;
@@ -740,17 +749,14 @@ export default function NewQuotationFlow() {
                 </Field>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
-                <Select
+                <SearchableSelect
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
+                  options={categoryOptions}
+                  allLabel="All Categories"
+                  placeholder="Search category"
                 >
-                  <option value="all">All Categories</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </Select>
+                </SearchableSelect>
                 <Select
                   value={foodTypeFilter}
                   onChange={(e) => setFoodTypeFilter(e.target.value)}

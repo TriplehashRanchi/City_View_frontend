@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   LoadingState,
   PaginationControls,
@@ -35,10 +36,16 @@ const statusStyles = {
 const PAGE_SIZE = 8;
 
 export default function ProductsPage() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
+  const currentPage = (() => {
+    const page = Number(searchParams.get("page"));
+    return Number.isInteger(page) && page > 0 ? page : 1;
+  })();
 
   useEffect(() => {
     productsApi
@@ -67,6 +74,38 @@ export default function ProductsPage() {
     const start = (safePage - 1) * PAGE_SIZE;
     return rows.slice(start, start + PAGE_SIZE);
   }, [rows, safePage]);
+
+  useEffect(() => {
+    if (loading) return;
+
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (safePage <= 1) {
+      params.delete("page");
+    } else {
+      params.set("page", String(safePage));
+    }
+
+    const nextQuery = params.toString();
+    const currentQuery = searchParams.toString();
+    if (nextQuery !== currentQuery) {
+      const nextUrl = nextQuery ? `${pathname}?${nextQuery}` : pathname;
+      router.replace(nextUrl, { scroll: false });
+    }
+  }, [loading, pathname, router, safePage, searchParams]);
+
+  const handlePageChange = (page) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (page <= 1) {
+      params.delete("page");
+    } else {
+      params.set("page", String(page));
+    }
+    const nextQuery = params.toString();
+    router.push(nextQuery ? `${pathname}?${nextQuery}` : pathname, {
+      scroll: false,
+    });
+  };
 
   return (
     <div className="mx-auto max-w-7xl space-y-8">
@@ -97,7 +136,7 @@ export default function ProductsPage() {
               value={search}
               onChange={(event) => {
                 setSearch(event.target.value);
-                setCurrentPage(1);
+                handlePageChange(1);
               }}
               placeholder="Search products"
               className="pl-11"
@@ -199,7 +238,7 @@ export default function ProductsPage() {
                         <td className="pl-10 py-5 align-center">
                           <div className="flex items-center gap-4">
                             <Link
-                              href={`/products/${row.id}/edit`}
+                              href={`/products/${row.id}/edit?page=${safePage}`}
                               className="inline-flex items-center gap-2 font-semibold text-[#7b6540] transition hover:text-[#5d4a28]"
                               aria-label={`Edit ${row.name || "product"}`}
                             >
@@ -218,7 +257,7 @@ export default function ProductsPage() {
               totalPages={totalPages}
               totalItems={rows.length}
               pageSize={PAGE_SIZE}
-              onPageChange={setCurrentPage}
+              onPageChange={handlePageChange}
             />
           </>
         ) : (

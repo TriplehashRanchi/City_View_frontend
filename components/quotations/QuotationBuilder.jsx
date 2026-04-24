@@ -10,6 +10,7 @@ import {
   PageIntro,
   Panel,
   PrimaryButton,
+  SearchableSelect,
   SecondaryButton,
   Select,
   TextArea,
@@ -208,6 +209,14 @@ export default function QuotationBuilder({ eventId }) {
     return 0;
   }, [state.discountType, state.discountValue, subtotal]);
   const estimatedFinal = Math.max(subtotal - discountAmount, 0);
+  const categoryOptions = useMemo(
+    () =>
+      categories.map((category) => ({
+        value: String(category.id),
+        label: category.name,
+      })),
+    [categories],
+  );
 
   const applyPackage = async (packageId) => {
     const pkg = packages.find((item) => String(item.id) === String(packageId));
@@ -380,14 +389,13 @@ export default function QuotationBuilder({ eventId }) {
                 <TextInput value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search products" />
               </Field>
               <div className="grid gap-3 md:grid-cols-2">
-                <Select value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)}>
-                  <option value="all">All Categories</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </Select>
+                <SearchableSelect
+                  value={categoryFilter}
+                  onChange={(event) => setCategoryFilter(event.target.value)}
+                  options={categoryOptions}
+                  allLabel="All Categories"
+                  placeholder="Search category"
+                />
                 <Select value={foodTypeFilter} onChange={(event) => setFoodTypeFilter(event.target.value)}>
                   <option value="all">All Food Types</option>
                   <option value="veg">Veg</option>

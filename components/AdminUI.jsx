@@ -153,6 +153,137 @@ export function Select({ className = "", children, ...props }) {
   );
 }
 
+export function SearchableSelect({
+  value,
+  onChange,
+  options = [],
+  placeholder = "Search and select",
+  allLabel = "All",
+  allValue = "all",
+  className = "",
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const rootRef = useRef(null);
+
+  const normalizedOptions = useMemo(
+    () =>
+      options.map((option) =>
+        typeof option === "string"
+          ? { value: option, label: option }
+          : option,
+      ),
+    [options],
+  );
+
+  const selectedOption =
+    normalizedOptions.find(
+      (option) => String(option.value) === String(value ?? allValue),
+    ) || null;
+
+  const filteredOptions = useMemo(() => {
+    const term = query.trim().toLowerCase();
+    if (!term) return normalizedOptions;
+    return normalizedOptions.filter((option) =>
+      String(option.label || "")
+        .toLowerCase()
+        .includes(term),
+    );
+  }, [normalizedOptions, query]);
+
+  useEffect(() => {
+    const handlePointerDown = (event) => {
+      if (!rootRef.current?.contains(event.target)) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => document.removeEventListener("mousedown", handlePointerDown);
+  }, []);
+
+  const selectValue = (nextValue) => {
+    setOpen(false);
+    setQuery("");
+    onChange?.({
+      target: { value: nextValue },
+      currentTarget: { value: nextValue },
+    });
+  };
+
+  return (
+    <div ref={rootRef} className={`relative ${className}`}>
+      <button
+        type="button"
+        onClick={() => {
+          setQuery("");
+          setOpen((current) => !current);
+        }}
+        className="editorial-select flex w-full items-center justify-between px-4 py-3 pr-11 text-left text-sm"
+      >
+        <span className="truncate">
+          {selectedOption?.label || allLabel}
+        </span>
+      </button>
+      <ChevronDown
+        size={18}
+        className={`pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#7b6540] transition ${open ? "rotate-180" : ""}`}
+      />
+
+      {open ? (
+        <div className="absolute left-0 right-0 z-30 mt-2 overflow-hidden rounded-sm border border-[rgba(123,101,64,0.18)] bg-[#fffdf7] shadow-[0_18px_30px_rgba(47,51,49,0.08)]">
+          <div className="border-b border-[rgba(123,101,64,0.12)] p-3">
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder={placeholder}
+              className="editorial-input px-4 py-3 text-sm"
+            />
+          </div>
+          <div className="max-h-72 overflow-y-auto">
+            <button
+              type="button"
+              onClick={() => selectValue(allValue)}
+              className={`block w-full px-4 py-3 text-left text-sm transition ${
+                String(value ?? allValue) === String(allValue)
+                  ? "bg-[#efe4ca] font-semibold text-[#6f5d33]"
+                  : "text-[#2f3331] hover:bg-[#f7f1e5]"
+              }`}
+            >
+              {allLabel}
+            </button>
+            {filteredOptions.length ? (
+              filteredOptions.map((option) => {
+                const active =
+                  String(option.value) === String(value ?? allValue);
+
+                return (
+                  <button
+                    key={String(option.value)}
+                    type="button"
+                    onClick={() => selectValue(option.value)}
+                    className={`block w-full px-4 py-3 text-left text-sm transition ${
+                      active
+                        ? "bg-[#efe4ca] font-semibold text-[#6f5d33]"
+                        : "text-[#2f3331] hover:bg-[#f7f1e5]"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })
+            ) : (
+              <div className="px-4 py-4 text-sm text-[#5f6662]">
+                No options found.
+              </div>
+            )}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function PrimaryButton({ children, className = "", ...props }) {
   return (
     <button
