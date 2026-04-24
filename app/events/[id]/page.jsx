@@ -8,6 +8,13 @@ import { quotationsApi } from "@/services/quotations";
 import { formatDate, titleize, unwrapEntityResponse, unwrapListResponse } from "@/services/normalizers";
 import { useParams } from "next/navigation";
 
+const DetailRow = ({ label, value }) => (
+  <div className="flex items-start justify-between gap-6 border-b border-[var(--outline-ghost)] py-1 text-sm leading-7 text-[#2f3331] last:border-b-0">
+    <span className="text-[#5d5e61]">{label}</span>
+    <span className="text-right">{value || "-"}</span>
+  </div>
+);
+
 export default function EventDetailPage() {
   const params = useParams();
   const [event, setEvent] = useState(null);
@@ -37,12 +44,12 @@ export default function EventDetailPage() {
       <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
         <Panel title="Event Summary">
           <div className="grid gap-4 text-sm leading-7 text-[#2f3331]">
-            <p><span className="text-[#5d5e61]">Client:</span> {event?.client_name || "-"}</p>
-            <p><span className="text-[#5d5e61]">Date:</span> {formatDate(event?.event_date)}</p>
-            <p><span className="text-[#5d5e61]">Guests:</span> {event?.guest_count || "-"}</p>
-            <p><span className="text-[#5d5e61]">Venue:</span> {event?.venue || "-"}</p>
-            <p><span className="text-[#5d5e61]">Status:</span> {titleize(event?.event_status)}</p>
-            <p><span className="text-[#5d5e61]">Notes:</span> {event?.notes || "-"}</p>
+            <DetailRow label="Client" value={event?.client_name || "-"} />
+            <DetailRow label="Date" value={formatDate(event?.event_date)} />
+            <DetailRow label="Guests" value={event?.guest_count || "-"} />
+            <DetailRow label="Venue" value={event?.venue || "-"} />
+            <DetailRow label="Status" value={titleize(event?.event_status)} />
+            <DetailRow label="Notes" value={event?.notes || "-"} />
           </div>
         </Panel>
 

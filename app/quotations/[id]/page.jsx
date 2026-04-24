@@ -9,6 +9,13 @@ import { useParams } from "next/navigation";
 import { ArrowUpRight, Download, MessageCircle } from "lucide-react";
 import { SiWhatsapp } from "react-icons/si";
 
+const DetailRow = ({ label, value }) => (
+  <div className="flex items-start justify-between gap-6 border-b border-[var(--outline-ghost)] py-3 text-sm leading-7 text-[#2f3331] last:border-b-0">
+    <span className="text-[#5d5e61]">{label}</span>
+    <span className="text-right">{value || "-"}</span>
+  </div>
+);
+
 export default function QuotationDetailPage() {
   const params = useParams();
   const [quotation, setQuotation] = useState(null);
@@ -106,10 +113,10 @@ export default function QuotationDetailPage() {
       <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
         <Panel title="Summary">
           <div className="grid gap-4 text-sm leading-7 text-[#2f3331]">
-            <p><span className="text-[#5d5e61]">Client:</span> {quotation?.client_name || "-"}</p>
-            <p><span className="text-[#5d5e61]">Occasion:</span> {quotation?.occasion_type || "-"}</p>
-            <p><span className="text-[#5d5e61]">Event Date:</span> {formatDate(quotation?.event_date)}</p>
-            <p><span className="text-[#5d5e61]">Venue:</span> {quotation?.venue || "-"}</p>
+            <DetailRow label="Client" value={quotation?.client_name || "-"} />
+            <DetailRow label="Occasion" value={quotation?.occasion_type || "-"} />
+            <DetailRow label="Event Date" value={formatDate(quotation?.event_date)} />
+            <DetailRow label="Venue" value={quotation?.venue || "-"} />
           </div>
         </Panel>
 

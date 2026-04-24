@@ -27,8 +27,8 @@ const navigation = [
       { label: "Packages", path: "/packages", icon: Package2 },
       { label: "Clients", path: "/clients", icon: Users },
       { label: "Events", path: "/events", icon: CalendarDays },
-      { label: "Expenses", path: "/expenses", icon: HandCoins },
       { label: "Quotations", path: "/quotations", icon: FileText },
+      { label: "Expenses", path: "/expenses", icon: HandCoins },
     ],
   },
 ];
@@ -57,9 +57,7 @@ export default function Sidebar({
       <aside
         className={`editorial-muted fixed left-0 top-0 z-40 flex h-screen border-r border-[#e1e0df] pb-6 flex-col overflow-hidden transition-[width,transform] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] md:translate-x-0 ${
           isCollapsed ? "w-[80px]" : "w-[280px]"
-        } ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        } ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
         <div
           className={`border-b border-[#e1e0df] transition-[padding,height] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
@@ -87,7 +85,11 @@ export default function Sidebar({
               aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
               title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
-              {isCollapsed ? <ChevronsRight size={20} /> : <ChevronsLeft size={20} />}
+              {isCollapsed ? (
+                <ChevronsRight size={20} />
+              ) : (
+                <ChevronsLeft size={20} />
+              )}
             </button>
           </div>
         </div>
@@ -99,9 +101,11 @@ export default function Sidebar({
         >
           {navigation.map((group) => (
             <div key={group.heading} className="space-y-4">
-               <div className="space-y-1">
+              <div className="space-y-1">
                 {group.items.map((item) => {
-                  const active = pathname === item.path || pathname.startsWith(`${item.path}/`);
+                  const active =
+                    pathname === item.path ||
+                    pathname.startsWith(`${item.path}/`);
                   const Icon = item.icon;
                   return (
                     <Link
@@ -122,7 +126,9 @@ export default function Sidebar({
                       <Icon size={18} strokeWidth={1.8} className="shrink-0" />
                       <span
                         className={`overflow-hidden whitespace-nowrap transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-                          isCollapsed ? "w-0 -translate-x-2 opacity-0" : "w-auto translate-x-0 opacity-100"
+                          isCollapsed
+                            ? "w-0 -translate-x-2 opacity-0"
+                            : "w-auto translate-x-0 opacity-100"
                         }`}
                       >
                         {item.label}
@@ -147,7 +153,9 @@ export default function Sidebar({
             <LogOut size={18} strokeWidth={2.5} />
             <span
               className={`overflow-hidden whitespace-nowrap font-semibold transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-                isCollapsed ? "w-0 -translate-x-2 opacity-0" : "w-auto translate-x-0 opacity-100"
+                isCollapsed
+                  ? "w-0 -translate-x-2 opacity-0"
+                  : "w-auto translate-x-0 opacity-100"
               }`}
             >
               Log Out

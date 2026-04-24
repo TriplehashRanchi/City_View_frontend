@@ -8,6 +8,13 @@ import { eventsApi } from "@/services/events";
 import { formatDate, titleize, unwrapEntityResponse, unwrapListResponse } from "@/services/normalizers";
 import { useParams } from "next/navigation";
 
+const DetailRow = ({ label, value }) => (
+  <div className="flex items-start justify-between gap-6 border-b border-[var(--outline-ghost)] py-1 text-sm leading-7 text-[#2f3331] last:border-b-0">
+    <span className="text-[#5d5e61]">{label}</span>
+    <span className="text-right">{value || "-"}</span>
+  </div>
+);
+
 export default function ClientDetailPage() {
   const params = useParams();
   const [client, setClient] = useState(null);
@@ -37,11 +44,11 @@ export default function ClientDetailPage() {
       <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
         <Panel title="Profile">
           <div className="grid gap-4 text-sm leading-7 text-[#2f3331]">
-            <p><span className="text-[#5d5e61]">Phone:</span> {client?.phone || "-"}</p>
-            <p><span className="text-[#5d5e61]">Email:</span> {client?.email || "-"}</p>
-            <p><span className="text-[#5d5e61]">Company:</span> {client?.company_name || "-"}</p>
-            <p><span className="text-[#5d5e61]">Status:</span> {titleize(client?.status)}</p>
-            <p><span className="text-[#5d5e61]">Notes:</span> {client?.notes || "-"}</p>
+            <DetailRow label="Phone" value={client?.phone || "-"} />
+            <DetailRow label="Email" value={client?.email || "-"} />
+            <DetailRow label="Company" value={client?.company_name || "-"} />
+            <DetailRow label="Status" value={titleize(client?.status)} />
+            <DetailRow label="Notes" value={client?.notes || "-"} />
           </div>
         </Panel>
 
