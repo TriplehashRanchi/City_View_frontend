@@ -43,3 +43,39 @@ export function formatDate(value) {
     year: "numeric",
   }).format(date);
 }
+
+export function getExpenseAmounts(expense) {
+  const amount = toNumber(expense?.amount);
+  const gstEnabled = Boolean(expense?.gst);
+  const taxPercentage = toNumber(
+    expense?.tax_percentage ?? expense?.taxPercentage,
+  );
+  const amountIs = expense?.amount_is || expense?.amountIs || null;
+
+  if (!gstEnabled || taxPercentage <= 0 || !amountIs) {
+    return {
+      baseAmount: amount,
+      taxAmount: 0,
+      totalAmount: amount,
+    };
+  }
+
+  if (amountIs === "exclusive") {
+    const taxAmount = (amount * taxPercentage) / 100;
+    return {
+      baseAmount: amount,
+      taxAmount,
+      totalAmount: amount + taxAmount,
+    };
+  }
+
+  const divisor = 1 + taxPercentage / 100;
+  const baseAmount = divisor > 0 ? amount / divisor : amount;
+  const taxAmount = amount - baseAmount;
+
+  return {
+    baseAmount,
+    taxAmount,
+    totalAmount: amount,
+  };
+}
