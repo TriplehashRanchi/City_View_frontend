@@ -77,7 +77,7 @@ const getStoredAmountPayload = (form) => {
     const totalAmount = rawAmount + (rawAmount * taxPercentage) / 100;
     return {
       amount: Number(totalAmount.toFixed(2)),
-      amountIs: "inclusive",
+      amountIs: "exclusive",
     };
   }
 

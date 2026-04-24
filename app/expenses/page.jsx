@@ -17,6 +17,7 @@ import {
   formatCurrency,
   formatDate,
   getExpenseAmounts,
+  formatPercentage,
   titleize,
   unwrapListResponse,
 } from "@/services/normalizers";
@@ -308,7 +309,7 @@ export default function ExpensesPage() {
                       Amount
                     </th>
                     <th className="w-[12%] py-4 text-left text-[11px] font-semibold uppercase tracking-[0.18rem] text-[#5d5e61]">
-                      Payment
+                      GST
                     </th>
                     <th className="w-[11%] py-4 text-left text-[11px] font-semibold uppercase tracking-[0.18rem] text-[#5d5e61]">
                       Status
@@ -375,7 +376,9 @@ export default function ExpensesPage() {
                         </td>
                         <td className="py-5 align-top">
                           <p className="text-sm text-[#3c413e]">
-                            {titleize(row.payment_mode || row.paymentMode)}
+                            {row.gst
+                              ? `${formatPercentage(row.tax_percentage || row.taxPercentage || 0)} ${titleize(row.amount_is || row.amountIs)}`
+                              : "No GST"}
                           </p>
                         </td>
                         <td className="py-5 align-top">

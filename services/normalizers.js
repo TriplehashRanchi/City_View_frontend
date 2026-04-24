@@ -44,6 +44,12 @@ export function formatDate(value) {
   }).format(date);
 }
 
+export function formatPercentage(value) {
+  const numeric = toNumber(value, null);
+  if (numeric === null) return "-";
+  return `${Number.isInteger(numeric) ? numeric : numeric.toFixed(2).replace(/\.?0+$/, "")}%`;
+}
+
 export function getExpenseAmounts(expense) {
   const amount = toNumber(expense?.amount);
   const gstEnabled = Boolean(expense?.gst);
@@ -57,15 +63,6 @@ export function getExpenseAmounts(expense) {
       baseAmount: amount,
       taxAmount: 0,
       totalAmount: amount,
-    };
-  }
-
-  if (amountIs === "exclusive") {
-    const taxAmount = (amount * taxPercentage) / 100;
-    return {
-      baseAmount: amount,
-      taxAmount,
-      totalAmount: amount + taxAmount,
     };
   }
 
